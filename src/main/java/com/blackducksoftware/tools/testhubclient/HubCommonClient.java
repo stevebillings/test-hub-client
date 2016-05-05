@@ -17,7 +17,7 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.project.api.ProjectItem;
-import com.blackducksoftware.tools.testhubclient.model.component.ComponentItem;
+import com.blackducksoftware.tools.testhubclient.model.component.VulnerableComponentItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
@@ -165,12 +165,12 @@ public class HubCommonClient {
 	for (ProjectItem projectItem : projectItems) {
 	    String versionsLink = projectItem.getLink("versions");
 	    System.out.println("versionsLink: " + versionsLink);
-	    processProjectVersionsLink(versionsLink);
+	    processProjectVersionsLink(versionsLink, projectItem.getName());
 	}
     }
 
-    private void processProjectVersionsLink(String versionsLink)
-	    throws URISyntaxException, IOException {
+    private void processProjectVersionsLink(String versionsLink,
+	    String projectName) throws URISyntaxException, IOException {
 
 	final ClientResource resource = createGetClientResourceWithGivenLink(versionsLink);
 	System.out.println("Resource: " + resource);
@@ -192,13 +192,15 @@ public class HubCommonClient {
 			.getLink("vulnerable-components");
 		System.out.println("Link to vulnerable components: "
 			+ vulnerableComponentsLink);
-		processVulnerableComponentsLink(vulnerableComponentsLink);
+		processVulnerableComponentsLink(vulnerableComponentsLink,
+			projectName, versionItem.getVersionName());
 	    }
 	}
     }
 
-    private void processVulnerableComponentsLink(String vulnerableComponentsLink)
-	    throws URISyntaxException, IOException {
+    private void processVulnerableComponentsLink(
+	    String vulnerableComponentsLink, String projectName,
+	    String projectVersionName) throws URISyntaxException, IOException {
 	final ClientResource resource = createGetClientResourceWithGivenLink(vulnerableComponentsLink);
 	System.out.println("Resource: " + resource);
 	int responseCode = resource.getResponse().getStatus().getCode();
@@ -212,10 +214,37 @@ public class HubCommonClient {
 	    JsonArray array = json.get("items").getAsJsonArray();
 	    System.out.println("Got " + array.size() + " vulnerableComponents");
 	    for (JsonElement elem : array) {
-		ComponentItem vulnerableComponentItem = gson.fromJson(elem,
-			ComponentItem.class);
+		VulnerableComponentItem vulnerableComponentItem = gson
+			.fromJson(elem, VulnerableComponentItem.class);
 		System.out.println(vulnerableComponentItem);
-
+		if ("REMEDIATION_REQUIRED".equals(vulnerableComponentItem
+			.getVulnerabilityWithRemediation()
+			.getRemediationStatus())) {
+		    System.out
+			    .println("*** REMEDIATION REQUIRED: Creating ticket for project "
+				    + projectName
+				    + " / "
+				    + projectVersionName
+				    + ": Vulnerability "
+				    + vulnerableComponentItem
+					    .getVulnerabilityWithRemediation()
+					    .getVulnerabilityName()
+				    + " needs remediating");
+		}
+		if ("NEEDS_REVIEW".equals(vulnerableComponentItem
+			.getVulnerabilityWithRemediation()
+			.getRemediationStatus())) {
+		    System.out
+			    .println("*** NEEDS REVIEW: Creating ticket for project "
+				    + projectName
+				    + " / "
+				    + projectVersionName
+				    + ": Vulnerability "
+				    + vulnerableComponentItem
+					    .getVulnerabilityWithRemediation()
+					    .getVulnerabilityName()
+				    + " needs review");
+		}
 	    }
 	}
     }
