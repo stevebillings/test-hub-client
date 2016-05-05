@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.restlet.Context;
@@ -16,12 +15,16 @@ import org.restlet.resource.ClientResource;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
-import com.blackducksoftware.integration.hub.project.api.ProjectItem;
+import com.blackducksoftware.tools.testhubclient.model.component.ComponentVersion;
 import com.blackducksoftware.tools.testhubclient.model.component.VulnerableComponentItem;
+import com.blackducksoftware.tools.testhubclient.model.notification.ComponentVersionStatus;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
+import com.blackducksoftware.tools.testhubclient.model.policy.PolicyRule;
+import com.blackducksoftware.tools.testhubclient.model.policy.PolicyStatus;
+import com.blackducksoftware.tools.testhubclient.model.projectversion.ProjectVersion;
 import com.blackducksoftware.tools.testhubclient.model.projectversion.ProjectVersionItem;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -34,17 +37,15 @@ public class HubCommonClient {
     private String baseUrl;
     private HubIntRestService svc;
 
-    public static void main(String[] args) throws HubIntegrationException,
-	    URISyntaxException, BDRestException, IOException {
+    public static void main(String[] args) throws Exception {
 	HubCommonClient client = new HubCommonClient();
 	client.run();
     }
 
-    private void run() throws HubIntegrationException, URISyntaxException,
-	    BDRestException, IOException {
+    private void run() throws Exception {
 
 	baseUrl = "http://eng-hub-valid03.dc1.lan";
-	String username = "sbillings";
+	String username = "sysadmin";
 	String password = "blackduck";
 
 	login(baseUrl, username, password);
@@ -52,14 +53,13 @@ public class HubCommonClient {
 	String hubVersion = svc.getHubVersion();
 	System.out.println("Hub version: " + hubVersion);
 
-	processOneNotifOfEachType(baseUrl, "2015-01-01T00:00:00.000Z",
-		"2016-05-01T20:00:00.000Z", 1000);
+	processOneNotifOfEachType(baseUrl, "2016-05-01T20:00:00.000Z",
+		"2016-05-06T20:00:00.000Z", 1000);
 
     }
 
     private String processOneNotifOfEachType(String hubUrl, String startDate,
-	    String endDate, int limit) throws URISyntaxException,
-	    BDRestException, IOException {
+	    String endDate, int limit) throws Exception {
 
 	final ClientResource resource = createClientResourceForGetNotifications(
 		startDate, endDate, limit);
@@ -74,26 +74,26 @@ public class HubCommonClient {
 	    JsonObject json = parser.parse(response).getAsJsonObject();
 	    JsonArray array = json.get("items").getAsJsonArray();
 
-	    boolean haveProcessedVulnNotif = false;
-	    boolean haveProcessedRuleViolationNotif = false;
-	    boolean haveProcessedPolicyOverrideNotif = false;
+	    boolean doneProcessingVulnNotifs = false;
+	    boolean doneProcessingRuleViolationNotifs = false;
+	    boolean doneProcessingPolicyOverrideNotifs = false;
 	    for (JsonElement elem : array) {
 		NotificationItem genericNotif = gson.fromJson(elem,
 			NotificationItem.class);
 		// System.out.println("NotificationItem: " + genericNotif);
 		if ("VULNERABILITY".equals(genericNotif.getType())) {
 		    getVulnerabilityNotificationItem(gson, elem,
-			    !haveProcessedVulnNotif);
-		    haveProcessedVulnNotif = true;
+			    !doneProcessingVulnNotifs);
+		    // doneProcessingVulnNotifs = true;
 		} else if ("RULE_VIOLATION".equals(genericNotif.getType())) {
 		    getRuleViolationNotificationItem(gson, elem,
-			    !haveProcessedRuleViolationNotif);
-		    haveProcessedRuleViolationNotif = true;
+			    !doneProcessingRuleViolationNotifs);
+		    // doneProcessingRuleViolationNotifs = true;
 
 		} else if ("POLICY_OVERRIDE".equals(genericNotif.getType())) {
 		    getPolicyOverrideNotificationItem(gson, elem,
-			    !haveProcessedPolicyOverrideNotif);
-		    haveProcessedPolicyOverrideNotif = true;
+			    !doneProcessingPolicyOverrideNotifs);
+		    // doneProcessingPolicyOverrideNotifs = true;
 		} else {
 		    System.out
 			    .println("I don't know how to parse/print this type: "
@@ -132,17 +132,18 @@ public class HubCommonClient {
 	VulnerabilityNotificationItem vulnNotif = gson.fromJson(elem,
 		VulnerabilityNotificationItem.class);
 	if (processIt) {
-	    System.out.println(vulnNotif);
+	    System.out.println("======\n" + vulnNotif + "\n-----");
 	    processVulnerabilityNotification(vulnNotif);
 	}
     }
 
     private void getRuleViolationNotificationItem(Gson gson, JsonElement elem,
-	    boolean processIt) {
+	    boolean processIt) throws Exception {
 	RuleViolationNotificationItem ruleViolationNotif = gson.fromJson(elem,
 		RuleViolationNotificationItem.class);
 	if (processIt) {
-	    System.out.println(ruleViolationNotif);
+	    System.out.println("======\n" + ruleViolationNotif + "\n-----");
+	    processRuleViolationNotification(ruleViolationNotif);
 	}
     }
 
@@ -151,7 +152,108 @@ public class HubCommonClient {
 	PolicyOverrideNotificationItem policyOverrideNotif = gson.fromJson(
 		elem, PolicyOverrideNotificationItem.class);
 	if (processIt) {
-	    System.out.println(policyOverrideNotif);
+	    System.out.println("======\n" + policyOverrideNotif + "\n-----");
+	}
+    }
+
+    private void processRuleViolationNotification(
+	    RuleViolationNotificationItem ruleViolationNotif) throws Exception {
+	String projectName = ruleViolationNotif.getContent().getProjectName();
+	String projectVersionName = ruleViolationNotif.getContent()
+		.getProjectVersionName();
+	String componentVersionsInViolation = ruleViolationNotif.getContent()
+		.getComponentVersionsInViolation();
+	List<ComponentVersionStatus> compStatuses = ruleViolationNotif
+		.getContent().getComponentVersionStatuses();
+	for (ComponentVersionStatus compStatus : compStatuses) {
+	    System.out.println("######################### " + compStatus);
+	    String componentName = compStatus.getComponentName();
+	    String componentVersion = getComponentVersionNameFromLink(compStatus
+		    .getComponentVersion());
+	    String policyStatusLink = compStatus
+		    .getBomComponentVersionPolicyStatus();
+	    // System.out.println("*** policyStatus: " + policyStatusLink);
+	    processPolicyViolation(policyStatusLink, projectName,
+		    projectVersionName, componentName, componentVersion);
+	}
+	// System.out.println("*** TBD: Creating ticket for project "
+	// + projectName + " / " + projectVersionName
+	// + ": Component versions " + componentVersionsInViolation
+	// + " violate policy");
+    }
+
+    private String getComponentVersionNameFromLink(String componentVersionLink)
+	    throws Exception {
+	if (componentVersionLink == null) {
+	    return "<null>";
+	}
+	final ClientResource resource = createGetClientResourceWithGivenLink(componentVersionLink);
+	System.out.println("Resource: " + resource);
+	int responseCode = resource.getResponse().getStatus().getCode();
+	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+	    System.out.println("SUCCESS getting projectVersion");
+	    final String response = readResponseAsString(resource.getResponse());
+
+	    Gson gson = new GsonBuilder().create();
+	    JsonParser parser = new JsonParser();
+	    JsonObject json = parser.parse(response).getAsJsonObject();
+
+	    ComponentVersion componentVersion = gson.fromJson(json,
+		    ComponentVersion.class);
+	    return componentVersion.getVersionName();
+	}
+	throw new Exception("Error getting component version name");
+    }
+
+    private void processPolicyViolation(String policyStatusLink,
+	    String projectName, String projectVersion, String componentName,
+	    String componentVersion) throws IOException, URISyntaxException {
+	final ClientResource resource = createGetClientResourceWithGivenLink(policyStatusLink);
+	System.out.println("Resource: " + resource);
+	int responseCode = resource.getResponse().getStatus().getCode();
+	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+	    System.out.println("SUCCESS getting projectVersion");
+	    final String response = readResponseAsString(resource.getResponse());
+
+	    Gson gson = new GsonBuilder().create();
+	    JsonParser parser = new JsonParser();
+	    JsonObject json = parser.parse(response).getAsJsonObject();
+
+	    PolicyStatus policyStatus = gson.fromJson(json, PolicyStatus.class);
+	    String policyLink = policyStatus.getLink("policy-rule");
+	    processPolicy(policyLink, projectName, projectVersion,
+		    componentName, componentVersion);
+	}
+    }
+
+    private void processPolicy(String policyLink, String projectName,
+	    String projectVersion, String componentName, String componentVersion)
+	    throws IOException, URISyntaxException {
+	final ClientResource resource = createGetClientResourceWithGivenLink(policyLink);
+	System.out.println("Resource: " + resource);
+	int responseCode = resource.getResponse().getStatus().getCode();
+	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+	    System.out.println("SUCCESS getting projectVersion");
+	    final String response = readResponseAsString(resource.getResponse());
+
+	    Gson gson = new GsonBuilder().create();
+	    JsonParser parser = new JsonParser();
+	    JsonObject json = parser.parse(response).getAsJsonObject();
+	    PolicyRule policyRule = gson.fromJson(json, PolicyRule.class);
+	    String policyRuleName = policyRule.getName();
+	    System.out
+		    .println("*** POLICY VIOLATION: Creating ticket for project "
+			    + projectName
+			    + " / "
+			    + projectVersion
+
+			    + " component "
+			    + componentName
+			    + " / "
+			    + componentVersion
+			    + " violates policy rule "
+			    + policyRuleName);
+
 	}
     }
 
@@ -159,55 +261,91 @@ public class HubCommonClient {
 	    VulnerabilityNotificationItem vulnNotif) throws IOException,
 	    BDRestException, URISyntaxException {
 	System.out.println("processVulnerabilityNotification()");
-	List<String> projects = new ArrayList<>();
-	List<ProjectItem> projectItems = svc.getProjectMatches("");
-	System.out.println("Got " + projectItems.size() + " projects");
-	for (ProjectItem projectItem : projectItems) {
-	    String versionsLink = projectItem.getLink("versions");
-	    System.out.println("versionsLink: " + versionsLink);
-	    processProjectVersionsLink(versionsLink, projectItem.getName());
+
+	for (ProjectVersion affectedProjectVersion : vulnNotif.getContent()
+		.getAffectedProjectVersions()) {
+	    String projectName = affectedProjectVersion.getProjectName();
+	    String projectVersionName = affectedProjectVersion
+		    .getProjectVersionName();
+	    String componentName = vulnNotif.getContent().getComponentName();
+	    String componentVersion = vulnNotif.getContent().getVersionName();
+
+	    String projectVersionLink = affectedProjectVersion
+		    .getProjectVersion();
+	    processProjectVersionLink(projectVersionLink, projectName,
+		    componentName, componentVersion);
 	}
     }
 
-    private void processProjectVersionsLink(String versionsLink,
-	    String projectName) throws URISyntaxException, IOException {
-
-	final ClientResource resource = createGetClientResourceWithGivenLink(versionsLink);
+    private void processProjectVersionLink(String projectVersionLink,
+	    String projectName, String targetComponentName,
+	    String targetComponentVersion) throws URISyntaxException,
+	    IOException {
+	final ClientResource resource = createGetClientResourceWithGivenLink(projectVersionLink);
 	System.out.println("Resource: " + resource);
 	int responseCode = resource.getResponse().getStatus().getCode();
 	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
-	    System.out.println("SUCCESS getting versions");
+	    System.out.println("SUCCESS getting projectVersion");
 	    final String response = readResponseAsString(resource.getResponse());
 
 	    Gson gson = new GsonBuilder().create();
 	    JsonParser parser = new JsonParser();
 	    JsonObject json = parser.parse(response).getAsJsonObject();
-	    JsonArray array = json.get("items").getAsJsonArray();
-	    System.out.println("Got " + array.size() + " versions");
-	    for (JsonElement elem : array) {
-		ProjectVersionItem versionItem = gson.fromJson(elem,
-			ProjectVersionItem.class);
-		System.out.println(versionItem);
-		String vulnerableComponentsLink = versionItem
-			.getLink("vulnerable-components");
-		System.out.println("Link to vulnerable components: "
-			+ vulnerableComponentsLink);
-		processVulnerableComponentsLink(vulnerableComponentsLink,
-			projectName, versionItem.getVersionName());
-	    }
+
+	    ProjectVersionItem versionItem = gson.fromJson(json,
+		    ProjectVersionItem.class);
+
+	    String vulnerableComponentsLink = versionItem
+		    .getLink("vulnerable-components");
+	    System.out.println("Link to vulnerable components: "
+		    + vulnerableComponentsLink);
+	    processVulnerableComponentsLink(vulnerableComponentsLink,
+		    projectName, versionItem.getVersionName(),
+		    targetComponentName, targetComponentVersion);
 	}
     }
 
+    // private void processProjectVersionsLink(String versionsLink,
+    // String projectName) throws URISyntaxException, IOException {
+    //
+    // final ClientResource resource =
+    // createGetClientResourceWithGivenLink(versionsLink);
+    // System.out.println("Resource: " + resource);
+    // int responseCode = resource.getResponse().getStatus().getCode();
+    // if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+    // System.out.println("SUCCESS getting versions");
+    // final String response = readResponseAsString(resource.getResponse());
+    //
+    // Gson gson = new GsonBuilder().create();
+    // JsonParser parser = new JsonParser();
+    // JsonObject json = parser.parse(response).getAsJsonObject();
+    // JsonArray array = json.get("items").getAsJsonArray();
+    // System.out.println("Got " + array.size() + " versions");
+    // for (JsonElement elem : array) {
+    // ProjectVersionItem versionItem = gson.fromJson(elem,
+    // ProjectVersionItem.class);
+    // System.out.println(versionItem);
+    // String vulnerableComponentsLink = versionItem
+    // .getLink("vulnerable-components");
+    // System.out.println("Link to vulnerable components: "
+    // + vulnerableComponentsLink);
+    // processVulnerableComponentsLink(vulnerableComponentsLink,
+    // projectName, versionItem.getVersionName());
+    // }
+    // }
+    // }
+
     private void processVulnerableComponentsLink(
 	    String vulnerableComponentsLink, String projectName,
-	    String projectVersionName) throws URISyntaxException, IOException {
+	    String projectVersionName, String targetComponentName,
+	    String targetComponentVersion) throws URISyntaxException,
+	    IOException {
 	final ClientResource resource = createGetClientResourceWithGivenLink(vulnerableComponentsLink);
 	System.out.println("Resource: " + resource);
 	int responseCode = resource.getResponse().getStatus().getCode();
 	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
 	    System.out.println("SUCCESS getting vulnerableComponents");
 	    final String response = readResponseAsString(resource.getResponse());
-
 	    Gson gson = new GsonBuilder().create();
 	    JsonParser parser = new JsonParser();
 	    JsonObject json = parser.parse(response).getAsJsonObject();
@@ -217,6 +355,19 @@ public class HubCommonClient {
 		VulnerableComponentItem vulnerableComponentItem = gson
 			.fromJson(elem, VulnerableComponentItem.class);
 		System.out.println(vulnerableComponentItem);
+
+		if (!vulnerableComponentItem.getComponentName().equals(
+			targetComponentName)) {
+		    System.out
+			    .println("Wrong component name; skipping this one");
+		    continue;
+		}
+		if (!vulnerableComponentItem.getComponentVersionName().equals(
+			targetComponentVersion)) {
+		    System.out
+			    .println("Wrong component version; skipping this one");
+		    continue;
+		}
 		if ("REMEDIATION_REQUIRED".equals(vulnerableComponentItem
 			.getVulnerabilityWithRemediation()
 			.getRemediationStatus())) {
@@ -229,6 +380,10 @@ public class HubCommonClient {
 				    + vulnerableComponentItem
 					    .getVulnerabilityWithRemediation()
 					    .getVulnerabilityName()
+				    + " on component "
+				    + targetComponentName
+				    + " / "
+				    + targetComponentVersion
 				    + " needs remediating");
 		}
 		if ("NEEDS_REVIEW".equals(vulnerableComponentItem
@@ -243,6 +398,10 @@ public class HubCommonClient {
 				    + vulnerableComponentItem
 					    .getVulnerabilityWithRemediation()
 					    .getVulnerabilityName()
+				    + " on component "
+				    + targetComponentName
+				    + " / "
+				    + targetComponentVersion
 				    + " needs review");
 		}
 	    }
