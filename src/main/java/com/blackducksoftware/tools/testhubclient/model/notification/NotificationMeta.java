@@ -3,7 +3,7 @@ package com.blackducksoftware.tools.testhubclient.model.notification;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Meta {
+public class NotificationMeta {
     public List<String> allow = new ArrayList<String>();
     public String href;
 

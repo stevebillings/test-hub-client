@@ -9,7 +9,7 @@ public class NotificationItem {
     public String createdAt;
 
     @SerializedName("_meta")
-    public com.blackducksoftware.tools.testhubclient.model.notification.Meta Meta;
+    public com.blackducksoftware.tools.testhubclient.model.notification.NotificationMeta Meta;
 
     // public VulnerabilityNotificationContent getContent() {
     // return content;
@@ -27,7 +27,7 @@ public class NotificationItem {
 	return createdAt;
     }
 
-    public com.blackducksoftware.tools.testhubclient.model.notification.Meta getMeta() {
+    public com.blackducksoftware.tools.testhubclient.model.notification.NotificationMeta getMeta() {
 	return Meta;
     }
 
