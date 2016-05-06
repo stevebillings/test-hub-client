@@ -1,38 +1,21 @@
 package com.blackducksoftware.tools.testhubclient.model.policy;
 
-import com.blackducksoftware.tools.testhubclient.model.Link;
-import com.google.gson.annotations.SerializedName;
-
 public class PolicyStatus {
-    private String approvalStatus;
+    private String overallStatus;
+    private String updatedAt;
 
-    @SerializedName("_meta")
-    private ApprovalStatusMeta meta;
-
-    public String getApprovalStatus() {
-	return approvalStatus;
+    public String getOverallStatus() {
+	return overallStatus;
     }
 
-    public ApprovalStatusMeta getMeta() {
-	return meta;
-    }
-
-    public String getLink(final String linkRel) {
-	if (getMeta() != null && getMeta().getLinks() != null
-		&& !getMeta().getLinks().isEmpty()) {
-	    for (final Link link : getMeta().getLinks()) {
-		if (link.getRel().equalsIgnoreCase(linkRel)) {
-		    return link.getHref();
-		}
-	    }
-	}
-	return null;
+    public String getUpdatedAt() {
+	return updatedAt;
     }
 
     @Override
     public String toString() {
-	return "PolicyStatus [approvalStatus=" + approvalStatus + ", meta="
-		+ meta + "]";
+	return "PolicyStatus [overallStatus=" + overallStatus + ", updatedAt="
+		+ updatedAt + "]";
     }
 
 }
