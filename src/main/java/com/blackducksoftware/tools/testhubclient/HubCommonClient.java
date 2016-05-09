@@ -59,7 +59,7 @@ public class HubCommonClient {
 	String hubVersion = svc.getHubVersion();
 	log.info("Hub version: " + hubVersion);
 
-	processNotifications(baseUrl, "2016-05-06T01:00:00.000Z",
+	processNotifications(baseUrl, "2016-05-01T01:00:00.000Z",
 		"2016-06-07T04:00:00.000Z", 1000);
 
 	log.info("Done");
@@ -88,20 +88,21 @@ public class HubCommonClient {
 	    for (JsonElement elem : array) {
 		NotificationItem genericNotif = gson.fromJson(elem,
 			NotificationItem.class);
+		String notificationTimeStamp = genericNotif.getCreatedAt();
 		log.info("\n\n======================================================================\n"
 			+ "NotificationItem: " + genericNotif);
 		if ("VULNERABILITY".equals(genericNotif.getType())) {
-		    getVulnerabilityNotificationItem(gson, elem,
-			    !doneProcessingVulnNotifs);
+		    getVulnerabilityNotificationItem(notificationTimeStamp,
+			    gson, elem, !doneProcessingVulnNotifs);
 		    // doneProcessingVulnNotifs = true;
 		} else if ("RULE_VIOLATION".equals(genericNotif.getType())) {
-		    getRuleViolationNotificationItem(gson, elem,
-			    !doneProcessingRuleViolationNotifs);
+		    getRuleViolationNotificationItem(notificationTimeStamp,
+			    gson, elem, !doneProcessingRuleViolationNotifs);
 		    // doneProcessingRuleViolationNotifs = true;
 
 		} else if ("POLICY_OVERRIDE".equals(genericNotif.getType())) {
-		    getPolicyOverrideNotificationItem(gson, elem,
-			    !doneProcessingPolicyOverrideNotifs);
+		    getPolicyOverrideNotificationItem(notificationTimeStamp,
+			    gson, elem, !doneProcessingPolicyOverrideNotifs);
 		    // doneProcessingPolicyOverrideNotifs = true;
 		} else {
 		    log.error("I don't know how to parse/print this type: "
@@ -132,38 +133,42 @@ public class HubCommonClient {
 	return resource;
     }
 
-    private void getVulnerabilityNotificationItem(Gson gson, JsonElement elem,
-	    boolean processIt) throws IOException, BDRestException,
-	    URISyntaxException {
+    private void getVulnerabilityNotificationItem(String notificationTimeStamp,
+	    Gson gson, JsonElement elem, boolean processIt) throws IOException,
+	    BDRestException, URISyntaxException {
 	VulnerabilityNotificationItem vulnNotif = gson.fromJson(elem,
 		VulnerabilityNotificationItem.class);
 	if (processIt) {
 	    log.debug("======\n" + vulnNotif + "\n-----");
-	    processVulnerabilityNotification(vulnNotif);
+	    processVulnerabilityNotification(notificationTimeStamp, vulnNotif);
 	}
     }
 
-    private void getRuleViolationNotificationItem(Gson gson, JsonElement elem,
-	    boolean processIt) throws Exception {
+    private void getRuleViolationNotificationItem(String notificationTimeStamp,
+	    Gson gson, JsonElement elem, boolean processIt) throws Exception {
 	RuleViolationNotificationItem ruleViolationNotif = gson.fromJson(elem,
 		RuleViolationNotificationItem.class);
 	if (processIt) {
 	    log.debug("======\n" + ruleViolationNotif + "\n-----");
-	    processRuleViolationNotification(ruleViolationNotif);
+	    processRuleViolationNotification(notificationTimeStamp,
+		    ruleViolationNotif);
 	}
     }
 
-    private void getPolicyOverrideNotificationItem(Gson gson, JsonElement elem,
+    private void getPolicyOverrideNotificationItem(
+	    String notificationTimeStamp, Gson gson, JsonElement elem,
 	    boolean processIt) throws Exception {
 	PolicyOverrideNotificationItem policyOverrideNotif = gson.fromJson(
 		elem, PolicyOverrideNotificationItem.class);
 	if (processIt) {
 	    log.debug("======\n" + policyOverrideNotif + "\n-----");
-	    processPolicyOverrideNotification(policyOverrideNotif);
+	    processPolicyOverrideNotification(notificationTimeStamp,
+		    policyOverrideNotif);
 	}
     }
 
     private void processPolicyOverrideNotification(
+	    String notificationTimeStamp,
 	    PolicyOverrideNotificationItem policyOverrideNotif)
 	    throws Exception {
 	String projectName = policyOverrideNotif.getContent().getProjectName();
@@ -183,19 +188,13 @@ public class HubCommonClient {
 	    log.info("No ticket being generated");
 	    return;
 	}
-	System.out
-		.println("*** POLICY VIOLATION OVERRIDEN: Creating ticket for project '"
-			+ projectName
-			+ "' / '"
-			+ projectVersionName
+	System.out.println("*** " + notificationTimeStamp
+		+ "  POLICY VIOLATION OVERRIDEN: Creating ticket for project '"
+		+ projectName + "' / '" + projectVersionName
 
-			+ "'; component '"
-			+ componentName
-			+ "' / '"
-			+ componentVersion
-			+ "; firstName: '"
-			+ firstName
-			+ "'; lastName: '" + lastName + "'");
+		+ "'; component '" + componentName + "' / '" + componentVersion
+		+ "; firstName: '" + firstName + "'; lastName: '" + lastName
+		+ "'");
     }
 
     private String getCompPolicyStatusFromLink(String compPolicyStatusLink)
@@ -221,13 +220,13 @@ public class HubCommonClient {
 	throw new Exception("Error getting Component PolicyStatus");
     }
 
-    private void processRuleViolationNotification(
+    private void processRuleViolationNotification(String notificationTimeStamp,
 	    RuleViolationNotificationItem ruleViolationNotif) throws Exception {
 	String projectName = ruleViolationNotif.getContent().getProjectName();
 	String projectVersionName = ruleViolationNotif.getContent()
 		.getProjectVersionName();
-	String componentVersionsInViolation = ruleViolationNotif.getContent()
-		.getComponentVersionsInViolation();
+	// String componentVersionsInViolation = ruleViolationNotif.getContent()
+	// .getComponentVersionsInViolation();
 	List<ComponentVersionStatus> compStatuses = ruleViolationNotif
 		.getContent().getComponentVersionStatuses();
 	for (ComponentVersionStatus compStatus : compStatuses) {
@@ -243,9 +242,9 @@ public class HubCommonClient {
 	    String policyStatusLink = compStatus
 		    .getBomComponentVersionPolicyStatus();
 	    // log.debug("policyStatus: " + policyStatusLink);
-	    processPolicyViolation(ruleViolationNotif, policyStatusLink,
-		    projectName, projectVersionName, componentName,
-		    componentVersion);
+	    processPolicyViolation(notificationTimeStamp, ruleViolationNotif,
+		    policyStatusLink, projectName, projectVersionName,
+		    componentName, componentVersion);
 	}
     }
 
@@ -272,7 +271,7 @@ public class HubCommonClient {
 	throw new Exception("Error getting component version name");
     }
 
-    private void processPolicyViolation(
+    private void processPolicyViolation(String notificationTimeStamp,
 	    RuleViolationNotificationItem ruleViolationNotificationItem,
 	    String policyStatusLink, String projectName, String projectVersion,
 	    String componentName, String componentVersion) throws Exception {
@@ -295,29 +294,23 @@ public class HubCommonClient {
 		return; // don't need a ticket if it's not in violation
 	    }
 	    String policyLink = policyStatus.getLink("policy-rule");
-	    processPolicy(ruleViolationNotificationItem, policyLink,
-		    projectName, projectVersion, componentName,
+	    processPolicy(notificationTimeStamp, ruleViolationNotificationItem,
+		    policyLink, projectName, projectVersion, componentName,
 		    componentVersion);
 	} else {
 	    log.error("Error getting policy status from " + policyStatusLink
 		    + ": " + responseCode);
-	    System.out
-		    .println("*** POLICY VIOLATION: Creating ticket for project "
-			    + projectName
-			    + " / "
-			    + projectVersion
+	    System.out.println("*** " + notificationTimeStamp
+		    + "  POLICY VIOLATION: Creating ticket for project "
+		    + projectName + " / " + projectVersion
 
-			    + " component "
-			    + componentName
-			    + " / "
-			    + componentVersion
-			    + " violates policy rule "
-			    + "<unavailable>");
+		    + " component " + componentName + " / " + componentVersion
+		    + " violates policy rule " + "<unavailable>");
 	    return;
 	}
     }
 
-    private void processPolicy(
+    private void processPolicy(String notificationTimeStamp,
 	    RuleViolationNotificationItem ruleViolationNotificationItem,
 	    String policyLink, String projectName, String projectVersion,
 	    String componentName, String componentVersion) throws IOException,
@@ -325,18 +318,12 @@ public class HubCommonClient {
 	if (policyLink == null) {
 	    log.warn("Policy link is null in notification item: "
 		    + ruleViolationNotificationItem);
-	    System.out
-		    .println("*** POLICY VIOLATION: Creating ticket for project "
-			    + projectName
-			    + " / "
-			    + projectVersion
+	    System.out.println("*** " + notificationTimeStamp
+		    + "  POLICY VIOLATION: Creating ticket for project "
+		    + projectName + " / " + projectVersion
 
-			    + " component "
-			    + componentName
-			    + " / "
-			    + componentVersion
-			    + " violates policy rule "
-			    + "<null>");
+		    + " component " + componentName + " / " + componentVersion
+		    + " violates policy rule " + "<null>");
 	    return;
 	}
 	final ClientResource resource = createGetClientResourceWithGivenLink(policyLink);
@@ -351,23 +338,17 @@ public class HubCommonClient {
 	    JsonObject json = parser.parse(response).getAsJsonObject();
 	    PolicyRule policyRule = gson.fromJson(json, PolicyRule.class);
 	    String policyRuleName = policyRule.getName();
-	    System.out
-		    .println("*** POLICY VIOLATION: Creating ticket for project "
-			    + projectName
-			    + " / "
-			    + projectVersion
+	    System.out.println("*** " + notificationTimeStamp
+		    + "  POLICY VIOLATION: Creating ticket for project "
+		    + projectName + " / " + projectVersion
 
-			    + " component "
-			    + componentName
-			    + " / "
-			    + componentVersion
-			    + " violates policy rule "
-			    + policyRuleName);
+		    + " component " + componentName + " / " + componentVersion
+		    + " violates policy rule " + policyRuleName);
 
 	}
     }
 
-    private void processVulnerabilityNotification(
+    private void processVulnerabilityNotification(String notificationTimeStamp,
 	    VulnerabilityNotificationItem vulnNotif) throws IOException,
 	    BDRestException, URISyntaxException {
 	log.debug("processVulnerabilityNotification()");
@@ -387,15 +368,16 @@ public class HubCommonClient {
 
 	    String projectVersionLink = affectedProjectVersion
 		    .getProjectVersion();
-	    processProjectVersionLink(projectVersionLink, projectName,
-		    componentName, componentVersion);
+	    processProjectVersionLink(notificationTimeStamp,
+		    projectVersionLink, projectName, componentName,
+		    componentVersion);
 	}
     }
 
-    private void processProjectVersionLink(String projectVersionLink,
-	    String projectName, String targetComponentName,
-	    String targetComponentVersion) throws URISyntaxException,
-	    IOException {
+    private void processProjectVersionLink(String notificationTimeStamp,
+	    String projectVersionLink, String projectName,
+	    String targetComponentName, String targetComponentVersion)
+	    throws URISyntaxException, IOException {
 	final ClientResource resource = createGetClientResourceWithGivenLink(projectVersionLink);
 	log.debug("Resource: " + resource);
 	int responseCode = resource.getResponse().getStatus().getCode();
@@ -414,43 +396,14 @@ public class HubCommonClient {
 		    .getLink("vulnerable-components");
 	    log.debug("Link to vulnerable components: "
 		    + vulnerableComponentsLink);
-	    processVulnerableComponentsLink(vulnerableComponentsLink,
-		    projectName, versionItem.getVersionName(),
-		    targetComponentName, targetComponentVersion);
+	    processVulnerableComponentsLink(notificationTimeStamp,
+		    vulnerableComponentsLink, projectName,
+		    versionItem.getVersionName(), targetComponentName,
+		    targetComponentVersion);
 	}
     }
 
-    // private void processProjectVersionsLink(String versionsLink,
-    // String projectName) throws URISyntaxException, IOException {
-    //
-    // final ClientResource resource =
-    // createGetClientResourceWithGivenLink(versionsLink);
-    // log.debug("Resource: " + resource);
-    // int responseCode = resource.getResponse().getStatus().getCode();
-    // if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
-    // log.debug("SUCCESS getting versions");
-    // final String response = readResponseAsString(resource.getResponse());
-    //
-    // Gson gson = new GsonBuilder().create();
-    // JsonParser parser = new JsonParser();
-    // JsonObject json = parser.parse(response).getAsJsonObject();
-    // JsonArray array = json.get("items").getAsJsonArray();
-    // log.debug("Got " + array.size() + " versions");
-    // for (JsonElement elem : array) {
-    // ProjectVersionItem versionItem = gson.fromJson(elem,
-    // ProjectVersionItem.class);
-    // log.debug(versionItem);
-    // String vulnerableComponentsLink = versionItem
-    // .getLink("vulnerable-components");
-    // log.debug("Link to vulnerable components: "
-    // + vulnerableComponentsLink);
-    // processVulnerableComponentsLink(vulnerableComponentsLink,
-    // projectName, versionItem.getVersionName());
-    // }
-    // }
-    // }
-
-    private void processVulnerableComponentsLink(
+    private void processVulnerableComponentsLink(String notificationTimeStamp,
 	    String vulnerableComponentsLink, String projectName,
 	    String projectVersionName, String targetComponentName,
 	    String targetComponentVersion) throws URISyntaxException,
@@ -485,7 +438,9 @@ public class HubCommonClient {
 			.getVulnerabilityWithRemediation()
 			.getRemediationStatus())) {
 		    System.out
-			    .println("*** REMEDIATION REQUIRED: Creating ticket for project "
+			    .println("*** "
+				    + notificationTimeStamp
+				    + "  REMEDIATION REQUIRED: Creating ticket for project "
 				    + projectName
 				    + " / "
 				    + projectVersionName
@@ -493,29 +448,25 @@ public class HubCommonClient {
 				    + vulnerableComponentItem
 					    .getVulnerabilityWithRemediation()
 					    .getVulnerabilityName()
-				    + " on component "
-				    + targetComponentName
-				    + " / "
-				    + targetComponentVersion
+				    + " on component " + targetComponentName
+				    + " / " + targetComponentVersion
 				    + " needs remediating");
 		}
 		if ("NEEDS_REVIEW".equals(vulnerableComponentItem
 			.getVulnerabilityWithRemediation()
 			.getRemediationStatus())) {
-		    System.out
-			    .println("*** NEEDS REVIEW: Creating ticket for project "
-				    + projectName
-				    + " / "
-				    + projectVersionName
-				    + ": Vulnerability "
-				    + vulnerableComponentItem
-					    .getVulnerabilityWithRemediation()
-					    .getVulnerabilityName()
-				    + " on component "
-				    + targetComponentName
-				    + " / "
-				    + targetComponentVersion
-				    + " needs review");
+		    System.out.println("*** "
+			    + notificationTimeStamp
+			    + "  NEEDS REVIEW: Creating ticket for project "
+			    + projectName
+			    + " / "
+			    + projectVersionName
+			    + ": Vulnerability "
+			    + vulnerableComponentItem
+				    .getVulnerabilityWithRemediation()
+				    .getVulnerabilityName() + " on component "
+			    + targetComponentName + " / "
+			    + targetComponentVersion + " needs review");
 		}
 	    }
 	}
