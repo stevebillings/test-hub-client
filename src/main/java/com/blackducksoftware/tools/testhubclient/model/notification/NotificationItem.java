@@ -1,8 +1,9 @@
 package com.blackducksoftware.tools.testhubclient.model.notification;
 
+import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.google.gson.annotations.SerializedName;
 
-public class NotificationItem {
+public class NotificationItem extends ModelClass {
     // public VulnerabilityNotificationContent content;
     public String contentType;
     public String type;
@@ -34,7 +35,8 @@ public class NotificationItem {
     @Override
     public String toString() {
 	return "NotificationItem [contentType=" + contentType + ", type="
-		+ type + ", createdAt=" + createdAt + ", Meta=" + Meta + "]";
+		+ type + ", createdAt=" + createdAt + ", Meta=" + Meta
+		+ ", getDescription()=" + getDescription() + "]";
     }
 
 }

@@ -9,9 +9,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.restlet.Client;
 import org.restlet.Context;
 import org.restlet.Response;
 import org.restlet.data.Method;
+import org.restlet.data.Protocol;
 import org.restlet.resource.ClientResource;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
@@ -40,7 +42,8 @@ public class HubCommonClient {
 
     public static void main(String[] args) throws Exception {
 	HubCommonClient client = new HubCommonClient();
-	client.run();
+	client.run("http://eng-hub-valid03.dc1.lan",
+		"2016-05-01T00:00:00.000Z", "2016-07-30T00:00:00.000Z", 1000);
     }
 
     private ClientLogger log;
@@ -53,12 +56,15 @@ public class HubCommonClient {
     private int duplicateCount = 0;
     private int ticketCount = 0;
 
-    private void run() throws Exception {
+    private Client restClient = new Client(new Context(), Protocol.HTTP);
+
+    public Statistics run(String hubUrl, String startDate, String endDate,
+	    int limit) throws Exception {
 	log = new ClientLogger();
 	log.info("Starting up...");
 
-	baseUrl = "http://eng-hub-valid03.dc1.lan";
-	// baseUrl = "http://eng-hub-valid03.dc1.lan";
+	baseUrl = hubUrl;
+
 	String username = "sysadmin";
 	String password = "blackduck";
 
@@ -67,12 +73,14 @@ public class HubCommonClient {
 	String hubVersion = svc.getHubVersion();
 	log.info("Hub version: " + hubVersion);
 
-	int notificationCount = processNotifications(baseUrl,
-		"2016-05-01T00:00:00.000Z", "2016-07-30T00:00:00.000Z", 1000);
+	int notificationCount = processNotifications(baseUrl, startDate,
+		endDate, limit);
 
 	log.info("Done processsing " + notificationCount
 		+ " notifications, generating " + ticketCount + " tickets, "
 		+ duplicateCount + " of which were duplicates");
+
+	return new Statistics(notificationCount, ticketCount, duplicateCount);
 
     }
 
@@ -133,6 +141,7 @@ public class HubCommonClient {
 	    String startDate, String endDate, int limit)
 	    throws URISyntaxException {
 	final ClientResource resource = svc.createClientResource();
+	resource.setNext(restClient);
 	resource.addSegment("api");
 	resource.addSegment("notifications");
 	resource.addQueryParameter("startDate", startDate);
