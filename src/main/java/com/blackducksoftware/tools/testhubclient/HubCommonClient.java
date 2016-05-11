@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.restlet.Context;
 import org.restlet.Response;
@@ -35,15 +37,21 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class HubCommonClient {
-    private ClientLogger log;
-
-    private String baseUrl;
-    private HubIntRestService svc;
 
     public static void main(String[] args) throws Exception {
 	HubCommonClient client = new HubCommonClient();
 	client.run();
     }
+
+    private ClientLogger log;
+
+    private String baseUrl;
+    private HubIntRestService svc;
+
+    private Map<Integer, JiraTicket> tickets = new HashMap<>();
+
+    private int duplicateCount = 0;
+    private int ticketCount = 0;
 
     private void run() throws Exception {
 	log = new ClientLogger();
@@ -59,19 +67,21 @@ public class HubCommonClient {
 	String hubVersion = svc.getHubVersion();
 	log.info("Hub version: " + hubVersion);
 
-	processNotifications(baseUrl, "2016-05-01T01:00:00.000Z",
-		"2016-06-07T04:00:00.000Z", 1000);
+	int notificationCount = processNotifications(baseUrl,
+		"2016-05-01T00:00:00.000Z", "2016-07-30T00:00:00.000Z", 1000);
 
-	log.info("Done");
+	log.info("Done processsing " + notificationCount
+		+ " notifications, generating " + ticketCount + " tickets, "
+		+ duplicateCount + " of which were duplicates");
 
     }
 
-    private String processNotifications(String hubUrl, String startDate,
+    private int processNotifications(String hubUrl, String startDate,
 	    String endDate, int limit) throws Exception {
 
 	final ClientResource resource = createClientResourceForGetNotifications(
 		startDate, endDate, limit);
-	log.debug("Resource: " + resource);
+	log.info("Resource: " + resource);
 	int responseCode = resource.getResponse().getStatus().getCode();
 
 	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
@@ -110,8 +120,8 @@ public class HubCommonClient {
 		}
 	    }
 
-	    final Response resp = resource.getResponse();
-	    return resp.getEntityAsText();
+	    // final Response resp = resource.getResponse();
+	    return array.size();
 	} else {
 	    throw new BDRestException(
 		    "There was a problem getting notifications. Error Code: "
@@ -178,36 +188,60 @@ public class HubCommonClient {
 		.getComponentName();
 	String componentVersion = policyOverrideNotif.getContent()
 		.getComponentVersionName();
-	String firstName = policyOverrideNotif.getContent().getFirstName();
-	String lastName = policyOverrideNotif.getContent().getLastName();
+	// String firstName = policyOverrideNotif.getContent().getFirstName();
+	// // always empty
+	// String lastName = policyOverrideNotif.getContent().getLastName();
 	String compPolicyStatusLink = policyOverrideNotif.getContent()
 		.getBomComponentVersionPolicyStatus();
-	String compPolicyStatusValue = getCompPolicyStatusFromLink(compPolicyStatusLink);
-	log.info("Overall policy status: " + compPolicyStatusValue);
-	if (!"IN_VIOLATION_OVERRIDDEN".equals(compPolicyStatusValue)) {
+	PolicyStatus compPolicyStatus = getCompPolicyStatusFromLink(compPolicyStatusLink);
+	String compPolicyStatusString = "<null>";
+	if (compPolicyStatus != null) {
+	    compPolicyStatusString = compPolicyStatus.getOverallStatus();
+	} else {
+	    log.error("Component Policy Status is null");
+	}
+	log.info("Overall policy status: " + compPolicyStatusString);
+	log.info("\tWas updated at: " + compPolicyStatus.getUpdatedAt());
+	if (!"IN_VIOLATION_OVERRIDDEN".equals(compPolicyStatusString)) {
 	    log.info("No ticket being generated");
 	    return;
 	}
-	System.out.println("*** " + notificationTimeStamp
-		+ "  POLICY VIOLATION OVERRIDEN: Creating ticket for project '"
-		+ projectName + "' / '" + projectVersionName
 
-		+ "'; component '" + componentName + "' / '" + componentVersion
-		+ "; firstName: '" + firstName + "'; lastName: '" + lastName
-		+ "'");
+	JiraTicket jiraTicket = new JiraTicket(notificationTimeStamp,
+		JiraTicketType.POLICY_OVERRIDE, projectName,
+		projectVersionName, componentName, componentVersion, null,
+		null, ActionRequired.REVIEW);
+	System.out.println(jiraTicket);
+	addToMap(jiraTicket);
     }
 
-    private String getCompPolicyStatusFromLink(String compPolicyStatusLink)
+    private void addToMap(JiraTicket jiraTicket) {
+	ticketCount++;
+	if (tickets.containsKey(jiraTicket.hashCode())) {
+	    duplicateCount++;
+	    System.out.println("\tDuplicate "
+		    + jiraTicket.getTicketType().name()
+		    + " notification (rule: " + jiraTicket.getRuleName()
+		    + "): The notification at \n\t\t"
+		    + jiraTicket.getDateCreated()
+		    + " is a duplicate of notification at \n\t\t"
+		    + tickets.get(jiraTicket.hashCode()).getDateCreated());
+	} else {
+	    tickets.put(jiraTicket.hashCode(), jiraTicket);
+	}
+    }
+
+    private PolicyStatus getCompPolicyStatusFromLink(String compPolicyStatusLink)
 	    throws Exception {
 
 	if (compPolicyStatusLink == null) {
-	    return "<null>";
+	    return null;
 	}
 	final ClientResource resource = createGetClientResourceWithGivenLink(compPolicyStatusLink);
 	log.debug("Resource: " + resource);
 	int responseCode = resource.getResponse().getStatus().getCode();
 	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
-	    log.debug("SUCCESS getting projectVersion");
+	    log.debug("SUCCESS getting compPolicyStatus");
 	    final String response = readResponseAsString(resource.getResponse());
 
 	    Gson gson = new GsonBuilder().create();
@@ -215,9 +249,13 @@ public class HubCommonClient {
 	    JsonObject json = parser.parse(response).getAsJsonObject();
 
 	    PolicyStatus policyStatus = gson.fromJson(json, PolicyStatus.class);
-	    return policyStatus.getOverallStatus();
+	    return policyStatus;
+	} else {
+	    log.warn("Error getting policy status from " + compPolicyStatusLink
+		    + ": " + responseCode
+		    + "; This component was probably removed from this BOM");
+	    return null;
 	}
-	throw new Exception("Error getting Component PolicyStatus");
     }
 
     private void processRuleViolationNotification(String notificationTimeStamp,
@@ -257,7 +295,7 @@ public class HubCommonClient {
 	log.debug("Resource: " + resource);
 	int responseCode = resource.getResponse().getStatus().getCode();
 	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
-	    log.debug("SUCCESS getting projectVersion");
+	    log.debug("SUCCESS getting componentVersion");
 	    final String response = readResponseAsString(resource.getResponse());
 
 	    Gson gson = new GsonBuilder().create();
@@ -279,7 +317,7 @@ public class HubCommonClient {
 	log.debug("Resource: " + resource);
 	int responseCode = resource.getResponse().getStatus().getCode();
 	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
-	    log.debug("SUCCESS getting projectVersion");
+	    log.info("SUCCESS getting policyStatus");
 	    final String response = readResponseAsString(resource.getResponse());
 
 	    Gson gson = new GsonBuilder().create();
@@ -298,14 +336,10 @@ public class HubCommonClient {
 		    policyLink, projectName, projectVersion, componentName,
 		    componentVersion);
 	} else {
-	    log.error("Error getting policy status from " + policyStatusLink
-		    + ": " + responseCode);
-	    System.out.println("*** " + notificationTimeStamp
-		    + "  POLICY VIOLATION: Creating ticket for project "
-		    + projectName + " / " + projectVersion
+	    log.warn("Error getting policy status from " + policyStatusLink
+		    + ": " + responseCode
+		    + "; This component was probably removed from this BOM");
 
-		    + " component " + componentName + " / " + componentVersion
-		    + " violates policy rule " + "<unavailable>");
 	    return;
 	}
     }
@@ -318,19 +352,20 @@ public class HubCommonClient {
 	if (policyLink == null) {
 	    log.warn("Policy link is null in notification item: "
 		    + ruleViolationNotificationItem);
-	    System.out.println("*** " + notificationTimeStamp
-		    + "  POLICY VIOLATION: Creating ticket for project "
-		    + projectName + " / " + projectVersion
 
-		    + " component " + componentName + " / " + componentVersion
-		    + " violates policy rule " + "<null>");
+	    JiraTicket jiraTicket = new JiraTicket(notificationTimeStamp,
+		    JiraTicketType.RULE_VIOLATION, projectName, projectVersion,
+		    componentName, componentVersion, null, null,
+		    ActionRequired.REVIEW);
+	    System.out.println(jiraTicket);
+	    addToMap(jiraTicket);
 	    return;
 	}
 	final ClientResource resource = createGetClientResourceWithGivenLink(policyLink);
 	log.debug("Resource: " + resource);
 	int responseCode = resource.getResponse().getStatus().getCode();
 	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
-	    log.debug("SUCCESS getting projectVersion");
+	    log.info("SUCCESS getting policy");
 	    final String response = readResponseAsString(resource.getResponse());
 
 	    Gson gson = new GsonBuilder().create();
@@ -338,13 +373,15 @@ public class HubCommonClient {
 	    JsonObject json = parser.parse(response).getAsJsonObject();
 	    PolicyRule policyRule = gson.fromJson(json, PolicyRule.class);
 	    String policyRuleName = policyRule.getName();
-	    System.out.println("*** " + notificationTimeStamp
-		    + "  POLICY VIOLATION: Creating ticket for project "
-		    + projectName + " / " + projectVersion
 
-		    + " component " + componentName + " / " + componentVersion
-		    + " violates policy rule " + policyRuleName);
-
+	    JiraTicket jiraTicket = new JiraTicket(notificationTimeStamp,
+		    JiraTicketType.RULE_VIOLATION, projectName, projectVersion,
+		    componentName, componentVersion, null, policyRuleName,
+		    ActionRequired.REVIEW);
+	    System.out.println(jiraTicket);
+	    addToMap(jiraTicket);
+	} else {
+	    log.error("Error getting violated rule name");
 	}
     }
 
@@ -437,36 +474,32 @@ public class HubCommonClient {
 		if ("REMEDIATION_REQUIRED".equals(vulnerableComponentItem
 			.getVulnerabilityWithRemediation()
 			.getRemediationStatus())) {
-		    System.out
-			    .println("*** "
-				    + notificationTimeStamp
-				    + "  REMEDIATION REQUIRED: Creating ticket for project "
-				    + projectName
-				    + " / "
-				    + projectVersionName
-				    + ": Vulnerability "
-				    + vulnerableComponentItem
-					    .getVulnerabilityWithRemediation()
-					    .getVulnerabilityName()
-				    + " on component " + targetComponentName
-				    + " / " + targetComponentVersion
-				    + " needs remediating");
+
+		    JiraTicket jiraTicket = new JiraTicket(
+			    notificationTimeStamp,
+			    JiraTicketType.VULNERABILITY, projectName,
+			    projectVersionName, targetComponentName,
+			    targetComponentVersion, vulnerableComponentItem
+				    .getVulnerabilityWithRemediation()
+				    .getVulnerabilityName(), null,
+			    ActionRequired.REMEDIATION);
+		    System.out.println(jiraTicket);
+		    addToMap(jiraTicket);
 		}
 		if ("NEEDS_REVIEW".equals(vulnerableComponentItem
 			.getVulnerabilityWithRemediation()
 			.getRemediationStatus())) {
-		    System.out.println("*** "
-			    + notificationTimeStamp
-			    + "  NEEDS REVIEW: Creating ticket for project "
-			    + projectName
-			    + " / "
-			    + projectVersionName
-			    + ": Vulnerability "
-			    + vulnerableComponentItem
+
+		    JiraTicket jiraTicket = new JiraTicket(
+			    notificationTimeStamp,
+			    JiraTicketType.VULNERABILITY, projectName,
+			    projectVersionName, targetComponentName,
+			    targetComponentVersion, vulnerableComponentItem
 				    .getVulnerabilityWithRemediation()
-				    .getVulnerabilityName() + " on component "
-			    + targetComponentName + " / "
-			    + targetComponentVersion + " needs review");
+				    .getVulnerabilityName(), null,
+			    ActionRequired.REVIEW);
+		    System.out.println(jiraTicket);
+		    addToMap(jiraTicket);
 		}
 	    }
 	}
