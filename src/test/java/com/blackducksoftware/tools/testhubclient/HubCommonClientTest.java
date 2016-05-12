@@ -8,6 +8,8 @@ import org.junit.Test;
 
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.hub.HubNotificationDao;
+import com.blackducksoftware.tools.testhubclient.service.NotificationService;
+import com.blackducksoftware.tools.testhubclient.service.impl.NotificationServiceImpl;
 
 public class HubCommonClientTest {
 
@@ -27,8 +29,9 @@ public class HubCommonClientTest {
 
 	NotificationDao dao = new HubNotificationDao(
 		"http://eng-hub-valid03.dc1.lan", username, password);
+	NotificationService svc = new NotificationServiceImpl(dao);
 
-	HubCommonClient client = new HubCommonClient(dao);
+	HubCommonClient client = new HubCommonClient(svc, dao);
 	Statistics stats = client.run("2016-05-01T00:00:00.000Z",
 		"2016-05-11T00:00:00.000Z", 1000);
 	assertEquals(711, stats.getNotificationCount());

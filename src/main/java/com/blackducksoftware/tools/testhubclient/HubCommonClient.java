@@ -2,24 +2,19 @@ package com.blackducksoftware.tools.testhubclient;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.dao.hub.HubNotificationDao;
 import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
-import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.component.ComponentVersion;
 import com.blackducksoftware.tools.testhubclient.model.component.VulnerableComponentItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.ComponentVersionStatus;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
-import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
 import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
@@ -29,9 +24,8 @@ import com.blackducksoftware.tools.testhubclient.model.policy.PolicyRule;
 import com.blackducksoftware.tools.testhubclient.model.policy.PolicyStatus;
 import com.blackducksoftware.tools.testhubclient.model.projectversion.ProjectVersion;
 import com.blackducksoftware.tools.testhubclient.model.projectversion.ProjectVersionItem;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.blackducksoftware.tools.testhubclient.service.NotificationService;
+import com.blackducksoftware.tools.testhubclient.service.impl.NotificationServiceImpl;
 
 public class HubCommonClient {
 
@@ -44,11 +38,14 @@ public class HubCommonClient {
 
 	NotificationDao dao = new HubNotificationDao(
 		"http://eng-hub-valid03.dc1.lan", username, password);
-	HubCommonClient client = new HubCommonClient(dao);
+	NotificationService svc = new NotificationServiceImpl(dao);
+	HubCommonClient client = new HubCommonClient(svc, dao);
+
 	client.run("2016-05-01T00:00:00.000Z", "2016-07-30T00:00:00.000Z", 10);
     }
 
     private final ClientLogger log;
+    private final NotificationService svc;
     private final NotificationDao dao;
     private final JsonModelParser jsonModelParser;
 
@@ -57,7 +54,9 @@ public class HubCommonClient {
     private int duplicateCount = 0;
     private int ticketCount = 0;
 
-    public HubCommonClient(NotificationDao dao) throws Exception {
+    public HubCommonClient(NotificationService svc, NotificationDao dao)
+	    throws Exception {
+	this.svc = svc;
 	this.dao = dao;
 	log = new ClientLogger();
 	String hubVersion = dao.getVersion();
@@ -82,52 +81,74 @@ public class HubCommonClient {
     private int processNotifications(NotificationDao dao, String startDate,
 	    String endDate, int limit) throws Exception {
 
-	List<String> urlSegments = new ArrayList<>();
-	urlSegments.add("api");
-	urlSegments.add("notifications");
-
-	Set<NameValuePair> queryParameters = new HashSet<>();
-	queryParameters.add(new NameValuePair("startDate", startDate));
-	queryParameters.add(new NameValuePair("endDate", endDate));
-	queryParameters.add(new NameValuePair("limit", String.valueOf(limit)));
-	NotificationResponse notifResponse = dao.getFromRelativeUrl(
-		NotificationResponse.class, urlSegments, queryParameters);
-
-	// Since we don't know the type of each item in advance, we
-	// re-parse each into a type-specific object
-	JsonObject jsonObject = notifResponse.getJsonObject();
-
-	JsonArray array = jsonObject.get("items").getAsJsonArray();
-
-	for (JsonElement elem : array) {
-	    NotificationItem genericNotif = jsonModelParser.parse(
-		    NotificationItem.class, elem);
-	    // gson.fromJson(elem, NotificationItem.class);
-	    String notificationTimeStamp = genericNotif.getCreatedAt();
+	List<NotificationItem> notificationItems = svc.getNotifications(
+		startDate, endDate, limit);
+	for (NotificationItem notificationItem : notificationItems) {
+	    String notificationTimeStamp = notificationItem.getCreatedAt();
 	    log.info("\n\n======================================================================\n"
-		    + "NotificationItem: " + genericNotif);
-	    if ("VULNERABILITY".equals(genericNotif.getType())) {
-		VulnerabilityNotificationItem vulnNotif = jsonModelParser
-			.parse(VulnerabilityNotificationItem.class, elem);
+		    + "NotificationItem: " + notificationItem);
+	    if (notificationItem instanceof VulnerabilityNotificationItem) {
 		processVulnerabilityNotification(notificationTimeStamp,
-			vulnNotif);
-	    } else if ("RULE_VIOLATION".equals(genericNotif.getType())) {
-		RuleViolationNotificationItem ruleViolationNotif = jsonModelParser
-			.parse(RuleViolationNotificationItem.class, elem);
+			(VulnerabilityNotificationItem) notificationItem);
+	    } else if (notificationItem instanceof RuleViolationNotificationItem) {
 		processRuleViolationNotification(notificationTimeStamp,
-			ruleViolationNotif);
-	    } else if ("POLICY_OVERRIDE".equals(genericNotif.getType())) {
-		PolicyOverrideNotificationItem policyOverrideNotif = jsonModelParser
-			.parse(PolicyOverrideNotificationItem.class, elem);
+			(RuleViolationNotificationItem) notificationItem);
+	    } else if (notificationItem instanceof PolicyOverrideNotificationItem) {
 		processPolicyOverrideNotification(notificationTimeStamp,
-			policyOverrideNotif);
+			(PolicyOverrideNotificationItem) notificationItem);
 	    } else {
 		log.error("Unknown notification type: "
-			+ genericNotif.getType() + ": " + genericNotif);
+			+ notificationItem.getType() + ": " + notificationItem);
 	    }
 	}
+	return notificationItems.size();
 
-	return array.size();
+	// List<String> urlSegments = new ArrayList<>();
+	// urlSegments.add("api");
+	// urlSegments.add("notifications");
+	//
+	// Set<NameValuePair> queryParameters = new HashSet<>();
+	// queryParameters.add(new NameValuePair("startDate", startDate));
+	// queryParameters.add(new NameValuePair("endDate", endDate));
+	// queryParameters.add(new NameValuePair("limit",
+	// String.valueOf(limit)));
+	// NotificationResponse notifResponse = dao.getFromRelativeUrl(
+	// NotificationResponse.class, urlSegments, queryParameters);
+	//
+	// // Since we don't know the type of each item in advance, we
+	// // re-parse each into a type-specific object
+	// JsonObject jsonObject = notifResponse.getJsonObject();
+	//
+	// JsonArray array = jsonObject.get("items").getAsJsonArray();
+	//
+	// for (JsonElement elem : array) {
+	// NotificationItem genericNotif = jsonModelParser.parse(
+	// NotificationItem.class, elem);
+	// // gson.fromJson(elem, NotificationItem.class);
+	// String notificationTimeStamp = genericNotif.getCreatedAt();
+	// log.info("\n\n======================================================================\n"
+	// + "NotificationItem: " + genericNotif);
+	// if ("VULNERABILITY".equals(genericNotif.getType())) {
+	// VulnerabilityNotificationItem vulnNotif = jsonModelParser
+	// .parse(VulnerabilityNotificationItem.class, elem);
+	// processVulnerabilityNotification(notificationTimeStamp,
+	// vulnNotif);
+	// } else if ("RULE_VIOLATION".equals(genericNotif.getType())) {
+	// RuleViolationNotificationItem ruleViolationNotif = jsonModelParser
+	// .parse(RuleViolationNotificationItem.class, elem);
+	// processRuleViolationNotification(notificationTimeStamp,
+	// ruleViolationNotif);
+	// } else if ("POLICY_OVERRIDE".equals(genericNotif.getType())) {
+	// PolicyOverrideNotificationItem policyOverrideNotif = jsonModelParser
+	// .parse(PolicyOverrideNotificationItem.class, elem);
+	// processPolicyOverrideNotification(notificationTimeStamp,
+	// policyOverrideNotif);
+	// } else {
+	// log.error("Unknown notification type: "
+	// + genericNotif.getType() + ": " + genericNotif);
+	// }
+	// }
+
     }
 
     private void processPolicyOverrideNotification(
