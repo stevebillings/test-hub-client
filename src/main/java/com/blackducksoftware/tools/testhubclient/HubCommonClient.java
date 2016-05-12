@@ -93,10 +93,6 @@ public class HubCommonClient {
 	NotificationResponse notifResponse = dao.getFromRelativeUrl(
 		NotificationResponse.class, urlSegments, queryParameters);
 
-	boolean doneProcessingVulnNotifs = false;
-	boolean doneProcessingRuleViolationNotifs = false;
-	boolean doneProcessingPolicyOverrideNotifs = false;
-
 	// Since we don't know the type of each item in advance, we
 	// re-parse each into a type-specific object
 	JsonObject jsonObject = notifResponse.getJsonObject();
@@ -111,20 +107,22 @@ public class HubCommonClient {
 	    log.info("\n\n======================================================================\n"
 		    + "NotificationItem: " + genericNotif);
 	    if ("VULNERABILITY".equals(genericNotif.getType())) {
-		getVulnerabilityNotificationItem(notificationTimeStamp, elem,
-			!doneProcessingVulnNotifs);
-		// doneProcessingVulnNotifs = true;
+		VulnerabilityNotificationItem vulnNotif = jsonModelParser
+			.parse(VulnerabilityNotificationItem.class, elem);
+		processVulnerabilityNotification(notificationTimeStamp,
+			vulnNotif);
 	    } else if ("RULE_VIOLATION".equals(genericNotif.getType())) {
-		getRuleViolationNotificationItem(notificationTimeStamp, elem,
-			!doneProcessingRuleViolationNotifs);
-		// doneProcessingRuleViolationNotifs = true;
-
+		RuleViolationNotificationItem ruleViolationNotif = jsonModelParser
+			.parse(RuleViolationNotificationItem.class, elem);
+		processRuleViolationNotification(notificationTimeStamp,
+			ruleViolationNotif);
 	    } else if ("POLICY_OVERRIDE".equals(genericNotif.getType())) {
-		getPolicyOverrideNotificationItem(notificationTimeStamp, elem,
-			!doneProcessingPolicyOverrideNotifs);
-		// doneProcessingPolicyOverrideNotifs = true;
+		PolicyOverrideNotificationItem policyOverrideNotif = jsonModelParser
+			.parse(PolicyOverrideNotificationItem.class, elem);
+		processPolicyOverrideNotification(notificationTimeStamp,
+			policyOverrideNotif);
 	    } else {
-		log.error("I don't know how to parse/print this type: "
+		log.error("Unknown notification type: "
 			+ genericNotif.getType() + ": " + genericNotif);
 	    }
 	}
@@ -132,54 +130,12 @@ public class HubCommonClient {
 	return array.size();
     }
 
-    private void getVulnerabilityNotificationItem(String notificationTimeStamp,
-	    JsonElement elem, boolean processIt) throws IOException,
-	    BDRestException, URISyntaxException, NotificationDaoException {
-	VulnerabilityNotificationItem vulnNotif = jsonModelParser
-		.parse(VulnerabilityNotificationItem.class, elem);
-	if (processIt) {
-	    log.debug("======\n" + vulnNotif + "\n-----");
-	    processVulnerabilityNotification(notificationTimeStamp, vulnNotif);
-	}
-    }
-
-    private void getRuleViolationNotificationItem(String notificationTimeStamp,
-	    JsonElement elem, boolean processIt) throws Exception {
-	RuleViolationNotificationItem ruleViolationNotif = jsonModelParser
-		.parse(RuleViolationNotificationItem.class, elem);
-	if (processIt) {
-	    log.debug("======\n" + ruleViolationNotif + "\n-----");
-	    processRuleViolationNotification(notificationTimeStamp,
-		    ruleViolationNotif);
-	}
-    }
-
-    private void getPolicyOverrideNotificationItem(
-	    String notificationTimeStamp, JsonElement elem, boolean processIt)
-	    throws Exception {
-	PolicyOverrideNotificationItem policyOverrideNotif = jsonModelParser
-		.parse(PolicyOverrideNotificationItem.class, elem);
-	if (processIt) {
-	    log.debug("======\n" + policyOverrideNotif + "\n-----");
-	    processPolicyOverrideNotification(notificationTimeStamp,
-		    policyOverrideNotif);
-	}
-    }
-
     private void processPolicyOverrideNotification(
 	    String notificationTimeStamp,
 	    PolicyOverrideNotificationItem policyOverrideNotif)
 	    throws Exception {
-	String projectName = policyOverrideNotif.getContent().getProjectName();
-	String projectVersionName = policyOverrideNotif.getContent()
-		.getProjectVersionName();
-	String componentName = policyOverrideNotif.getContent()
-		.getComponentName();
-	String componentVersion = policyOverrideNotif.getContent()
-		.getComponentVersionName();
-	String compPolicyStatusLink = policyOverrideNotif.getContent()
-		.getBomComponentVersionPolicyStatus();
-	PolicyStatus compPolicyStatus = getCompPolicyStatusFromLink(compPolicyStatusLink);
+	PolicyStatus compPolicyStatus = getCompPolicyStatusFromLink(policyOverrideNotif
+		.getContent().getBomComponentVersionPolicyStatus());
 	String compPolicyStatusString = "<null>";
 	if (compPolicyStatus != null) {
 	    compPolicyStatusString = compPolicyStatus.getOverallStatus();
@@ -194,9 +150,12 @@ public class HubCommonClient {
 	}
 
 	JiraTicket jiraTicket = new JiraTicket(notificationTimeStamp,
-		JiraTicketType.POLICY_OVERRIDE, projectName,
-		projectVersionName, componentName, componentVersion, null,
-		null, ActionRequired.REVIEW);
+		JiraTicketType.POLICY_OVERRIDE, policyOverrideNotif
+			.getContent().getProjectName(), policyOverrideNotif
+			.getContent().getProjectVersionName(),
+		policyOverrideNotif.getContent().getComponentName(),
+		policyOverrideNotif.getContent().getComponentVersionName(),
+		null, null, ActionRequired.REVIEW);
 	System.out.println(jiraTicket);
 	addToMap(jiraTicket);
     }
@@ -240,15 +199,10 @@ public class HubCommonClient {
 
     private void processRuleViolationNotification(String notificationTimeStamp,
 	    RuleViolationNotificationItem ruleViolationNotif) throws Exception {
-	String projectName = ruleViolationNotif.getContent().getProjectName();
-	String projectVersionName = ruleViolationNotif.getContent()
-		.getProjectVersionName();
-
 	List<ComponentVersionStatus> compStatuses = ruleViolationNotif
 		.getContent().getComponentVersionStatuses();
 	for (ComponentVersionStatus compStatus : compStatuses) {
 	    log.debug(compStatus.toString());
-	    String componentName = compStatus.getComponentName();
 	    String componentVersion;
 	    try {
 		componentVersion = getComponentVersionNameFromLink(compStatus
@@ -256,12 +210,12 @@ public class HubCommonClient {
 	    } catch (Exception e) {
 		componentVersion = "<not specified>";
 	    }
-	    String policyStatusLink = compStatus
-		    .getBomComponentVersionPolicyStatus();
-	    // log.debug("policyStatus: " + policyStatusLink);
+
 	    processPolicyViolation(notificationTimeStamp, ruleViolationNotif,
-		    policyStatusLink, projectName, projectVersionName,
-		    componentName, componentVersion);
+		    compStatus.getBomComponentVersionPolicyStatus(),
+		    ruleViolationNotif.getContent().getProjectName(),
+		    ruleViolationNotif.getContent().getProjectVersionName(),
+		    compStatus.getComponentName(), componentVersion);
 	}
     }
 
@@ -295,10 +249,9 @@ public class HubCommonClient {
 		log.info("Not generating a ticket");
 		return; // don't need a ticket if it's not in violation
 	    }
-	    String policyLink = policyStatus.getLink("policy-rule");
 	    processPolicy(notificationTimeStamp, ruleViolationNotificationItem,
-		    policyLink, projectName, projectVersion, componentName,
-		    componentVersion);
+		    policyStatus.getLink("policy-rule"), projectName,
+		    projectVersion, componentName, componentVersion);
 	} catch (NotificationDaoException e) {
 	    log.warn("Error getting policy status from " + policyStatusLink
 		    + ": " + e.getMessage()
@@ -327,12 +280,10 @@ public class HubCommonClient {
 	try {
 	    PolicyRule policyRule = dao.getFromAbsoluteUrl(PolicyRule.class,
 		    policyLink);
-	    String policyRuleName = policyRule.getName();
-
 	    JiraTicket jiraTicket = new JiraTicket(notificationTimeStamp,
 		    JiraTicketType.RULE_VIOLATION, projectName, projectVersion,
-		    componentName, componentVersion, null, policyRuleName,
-		    ActionRequired.REVIEW);
+		    componentName, componentVersion, null,
+		    policyRule.getName(), ActionRequired.REVIEW);
 	    System.out.println(jiraTicket);
 	    addToMap(jiraTicket);
 	} catch (NotificationDaoException e) {
@@ -352,17 +303,11 @@ public class HubCommonClient {
 	}
 	for (ProjectVersion affectedProjectVersion : vulnNotif.getContent()
 		.getAffectedProjectVersions()) {
-	    String projectName = affectedProjectVersion.getProjectName();
-	    String projectVersionName = affectedProjectVersion
-		    .getProjectVersionName();
-	    String componentName = vulnNotif.getContent().getComponentName();
-	    String componentVersion = vulnNotif.getContent().getVersionName();
-
-	    String projectVersionLink = affectedProjectVersion
-		    .getProjectVersion();
 	    processProjectVersionLink(notificationTimeStamp,
-		    projectVersionLink, projectName, componentName,
-		    componentVersion);
+		    affectedProjectVersion.getProjectVersion(),
+		    affectedProjectVersion.getProjectName(), vulnNotif
+			    .getContent().getComponentName(), vulnNotif
+			    .getContent().getVersionName());
 	}
     }
 
