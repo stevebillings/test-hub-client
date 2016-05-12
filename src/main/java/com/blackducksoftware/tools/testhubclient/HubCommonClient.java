@@ -13,7 +13,7 @@ import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.dao.hub.HubNotificationDao;
-import com.blackducksoftware.tools.testhubclient.json.JsonParser;
+import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.component.ComponentVersion;
 import com.blackducksoftware.tools.testhubclient.model.component.VulnerableComponentItem;
@@ -50,7 +50,7 @@ public class HubCommonClient {
 
     private final ClientLogger log;
     private final NotificationDao dao;
-    private final JsonParser jsonParser;
+    private final JsonModelParser jsonModelParser;
 
     private Map<Integer, JiraTicket> tickets = new HashMap<>();
 
@@ -62,7 +62,7 @@ public class HubCommonClient {
 	log = new ClientLogger();
 	String hubVersion = dao.getVersion();
 	log.info("Hub version: " + hubVersion);
-	jsonParser = new JsonParser();
+	jsonModelParser = new JsonModelParser();
     }
 
     public Statistics run(String startDate, String endDate, int limit)
@@ -104,7 +104,7 @@ public class HubCommonClient {
 	JsonArray array = jsonObject.get("items").getAsJsonArray();
 
 	for (JsonElement elem : array) {
-	    NotificationItem genericNotif = jsonParser.getFromJsonElement(
+	    NotificationItem genericNotif = jsonModelParser.parse(
 		    NotificationItem.class, elem);
 	    // gson.fromJson(elem, NotificationItem.class);
 	    String notificationTimeStamp = genericNotif.getCreatedAt();
@@ -135,8 +135,8 @@ public class HubCommonClient {
     private void getVulnerabilityNotificationItem(String notificationTimeStamp,
 	    JsonElement elem, boolean processIt) throws IOException,
 	    BDRestException, URISyntaxException, NotificationDaoException {
-	VulnerabilityNotificationItem vulnNotif = jsonParser
-		.getFromJsonElement(VulnerabilityNotificationItem.class, elem);
+	VulnerabilityNotificationItem vulnNotif = jsonModelParser
+		.parse(VulnerabilityNotificationItem.class, elem);
 	if (processIt) {
 	    log.debug("======\n" + vulnNotif + "\n-----");
 	    processVulnerabilityNotification(notificationTimeStamp, vulnNotif);
@@ -145,8 +145,8 @@ public class HubCommonClient {
 
     private void getRuleViolationNotificationItem(String notificationTimeStamp,
 	    JsonElement elem, boolean processIt) throws Exception {
-	RuleViolationNotificationItem ruleViolationNotif = jsonParser
-		.getFromJsonElement(RuleViolationNotificationItem.class, elem);
+	RuleViolationNotificationItem ruleViolationNotif = jsonModelParser
+		.parse(RuleViolationNotificationItem.class, elem);
 	if (processIt) {
 	    log.debug("======\n" + ruleViolationNotif + "\n-----");
 	    processRuleViolationNotification(notificationTimeStamp,
@@ -157,8 +157,8 @@ public class HubCommonClient {
     private void getPolicyOverrideNotificationItem(
 	    String notificationTimeStamp, JsonElement elem, boolean processIt)
 	    throws Exception {
-	PolicyOverrideNotificationItem policyOverrideNotif = jsonParser
-		.getFromJsonElement(PolicyOverrideNotificationItem.class, elem);
+	PolicyOverrideNotificationItem policyOverrideNotif = jsonModelParser
+		.parse(PolicyOverrideNotificationItem.class, elem);
 	if (processIt) {
 	    log.debug("======\n" + policyOverrideNotif + "\n-----");
 	    processPolicyOverrideNotification(notificationTimeStamp,

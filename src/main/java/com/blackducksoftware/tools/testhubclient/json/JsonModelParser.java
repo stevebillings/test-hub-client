@@ -6,12 +6,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
-public class JsonParser {
+public class JsonModelParser {
     private final Gson gson;
-    
-    public JsonParser() {
+
+    public JsonModelParser() {
 	this.gson = new GsonBuilder().create();
     }
+
     /**
      * Get an object of the given type from the given JSON element, using the
      * given Gson object.
@@ -22,11 +23,10 @@ public class JsonParser {
      * @return
      * @throws NotificationDaoException
      */
-    public <T extends ModelClass> T getFromJsonElement(
-	    Class<T> modelClass, JsonElement elem) {
+    public <T extends ModelClass> T parse(Class<T> modelClass, JsonElement elem) {
 	T modelObject = gson.fromJson(elem, modelClass);
 	modelObject
-		.setDescription("Instantiated via gson from JsonElement by JsonParser");
+		.setDescription("Instantiated via gson from JsonElement by JsonModelParser");
 
 	return modelObject;
     }

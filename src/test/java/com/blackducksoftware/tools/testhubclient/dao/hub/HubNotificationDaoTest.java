@@ -13,6 +13,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
+import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
@@ -153,13 +154,13 @@ public class HubNotificationDaoTest {
 		+ "\"href\": \"http://eng-hub-valid03.dc1.lan/api/notifications/e5071453-cbae-457f-b84c-9d60c79d0409\"\n"
 		+ "}\n" + "}\n" + "]\n" + "}";
 
-	Gson gson = new GsonBuilder().create();
 	JsonParser parser = new JsonParser();
 	JsonObject json = parser.parse(response).getAsJsonObject();
 	JsonArray array = json.get("items").getAsJsonArray();
 
-	NotificationItem notifItem = hub.getFromJsonElement(
-		NotificationItem.class, gson, array.get(0));
+	JsonModelParser jsonModelParser = new JsonModelParser();
+	NotificationItem notifItem = jsonModelParser.parse(
+		NotificationItem.class, array.get(0));
 
 	System.out.println(notifItem);
 	assertEquals("application/json", notifItem.getContentType());
@@ -170,7 +171,7 @@ public class HubNotificationDaoTest {
 		"http://eng-hub-valid03.dc1.lan/api/notifications/e5071453-cbae-457f-b84c-9d60c79d0409",
 		notifItem.getMeta().getHref());
 	assertEquals(
-		"Instantiated via gson from JsonElement by HubNotificationDao",
+		"Instantiated via gson from JsonElement by JsonModelParser",
 		notifItem.getDescription());
 
     }
