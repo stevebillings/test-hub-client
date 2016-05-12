@@ -3,8 +3,6 @@ package com.blackducksoftware.tools.testhubclient.dao.hub;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -22,6 +20,7 @@ import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.tools.testhubclient.ClientLogger;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
+import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.google.gson.Gson;
@@ -43,7 +42,7 @@ public class HubNotificationDao implements NotificationDao {
     @Override
     public <T extends ModelClass> T getFromRelativeUrl(Class<T> modelClass,
 	    List<String> urlSegments, Set<NameValuePair> queryParameters)
-	    throws Exception {
+	    throws NotificationDaoException {
 
 	final ClientResource resource = createClientResourceForGet(urlSegments,
 		queryParameters);
@@ -59,9 +58,10 @@ public class HubNotificationDao implements NotificationDao {
 	    T modelObject = gson.fromJson(json, modelClass);
 	    modelObject
 		    .setDescription("Instantiated via gson from JsonObject fetched from Hub by HubNotificationDao");
+	    modelObject.setJsonObject(json);
 	    return modelObject;
 	} else {
-	    throw new Exception(
+	    throw new NotificationDaoException(
 		    "Error getting resource from relative url segments "
 			    + urlSegments + " and query parameters "
 			    + queryParameters + "; errorCode: " + responseCode);
@@ -69,8 +69,13 @@ public class HubNotificationDao implements NotificationDao {
     }
 
     private ClientResource createClientResourceForGet(List<String> urlSegments,
-	    Set<NameValuePair> queryParameters) throws URISyntaxException {
-	final ClientResource resource = svc.createClientResource();
+	    Set<NameValuePair> queryParameters) throws NotificationDaoException {
+	ClientResource resource;
+	try {
+	    resource = svc.createClientResource();
+	} catch (URISyntaxException e) {
+	    throw new NotificationDaoException(e.getMessage());
+	}
 	for (String urlSegment : urlSegments) {
 	    resource.addSegment(urlSegment);
 	}
@@ -85,7 +90,7 @@ public class HubNotificationDao implements NotificationDao {
     }
 
     public <T extends ModelClass> T getFromUrl(Class<T> modelClass, String url)
-	    throws Exception {
+	    throws NotificationDaoException {
 
 	if (url == null) {
 	    return null;
@@ -109,30 +114,43 @@ public class HubNotificationDao implements NotificationDao {
 		    .setDescription("Instantiated via gson from JsonObject fetched from Hub by HubNotificationDao");
 	    return modelObject;
 	} else {
-	    throw new Exception("Error getting resource from " + url + ": "
-		    + responseCode);
+	    throw new NotificationDaoException("Error getting resource from "
+		    + url + ": " + responseCode);
 	}
     }
 
     private String readResponseAsString(final Response response)
-	    throws IOException {
+	    throws NotificationDaoException {
 	final StringBuilder sb = new StringBuilder();
-	final Reader reader = response.getEntity().getReader();
+	Reader reader;
+	try {
+	    reader = response.getEntity().getReader();
+	} catch (IOException e1) {
+	    throw new NotificationDaoException(e1.getMessage());
+	}
 	final BufferedReader bufReader = new BufferedReader(reader);
 	try {
 	    String line;
-	    while ((line = bufReader.readLine()) != null) {
-		sb.append(line);
-		sb.append("\n");
+	    try {
+		while ((line = bufReader.readLine()) != null) {
+		    sb.append(line);
+		    sb.append("\n");
+		}
+	    } catch (IOException e) {
+		throw new NotificationDaoException(e.getMessage());
 	    }
 	} finally {
-	    bufReader.close();
+	    try {
+		bufReader.close();
+	    } catch (IOException e) {
+	    }
 	}
 	return sb.toString();
     }
 
     private ClientResource createGetClientResourceWithGivenLink(
-	    Series<Cookie> cookies, String givenLink) throws URISyntaxException {
+	    Series<Cookie> cookies, String givenLink)
+	    throws NotificationDaoException {
 	final ClientResource resource = createClientResourceWithGivenLink(
 		cookies, givenLink);
 
@@ -142,7 +160,8 @@ public class HubNotificationDao implements NotificationDao {
     }
 
     private ClientResource createClientResourceWithGivenLink(
-	    Series<Cookie> cookies, String givenLink) throws URISyntaxException {
+	    Series<Cookie> cookies, String givenLink)
+	    throws NotificationDaoException {
 
 	final Context context = new Context();
 
@@ -158,44 +177,19 @@ public class HubNotificationDao implements NotificationDao {
 	// Should throw timeout exception after the specified timeout, default
 	// is 2 minutes
 
-	ClientResource resource = new ClientResource(context,
-		new URI(givenLink));
+	ClientResource resource;
+	try {
+	    resource = new ClientResource(context, new URI(givenLink));
+	} catch (URISyntaxException e) {
+	    throw new NotificationDaoException(e.getMessage());
+	}
 	resource.getRequest().setCookies(cookies);
 	return resource;
     }
 
-    public <T extends ModelClass> T instantiateModelClass(Class<T> modelClass)
-	    throws Exception {
-	T modelObject = null;
-	Constructor<?> constructor = null;
-	;
-	try {
-	    constructor = modelClass.getConstructor();
-	} catch (SecurityException e) {
-	    throw new Exception(e.getMessage());
-	} catch (NoSuchMethodException e) {
-	    throw new Exception(e.getMessage());
-	}
-
-	try {
-	    modelObject = (T) constructor.newInstance();
-	} catch (IllegalArgumentException e) {
-	    throw new Exception(e.getMessage());
-	} catch (InstantiationException e) {
-	    throw new Exception(e.getMessage());
-	} catch (IllegalAccessException e) {
-	    throw new Exception(e.getMessage());
-	} catch (InvocationTargetException e) {
-	    throw new Exception(e.getMessage());
-	}
-
-	modelObject.setDescription("Instantiated by HubNotificationDao");
-	return modelObject;
-    }
-
     @Override
     public <T extends ModelClass> T getFromJsonElement(Class<T> modelClass,
-	    Gson gson, JsonElement elem) throws Exception {
+	    Gson gson, JsonElement elem) throws NotificationDaoException {
 	T modelObject = gson.fromJson(elem, modelClass);
 	modelObject
 		.setDescription("Instantiated via gson from JsonElement by HubNotificationDao");
@@ -204,8 +198,12 @@ public class HubNotificationDao implements NotificationDao {
     }
 
     @Override
-    public String getVersion() throws Exception {
-	return svc.getHubVersion();
+    public String getVersion() throws NotificationDaoException {
+	try {
+	    return svc.getHubVersion();
+	} catch (IOException | BDRestException | URISyntaxException e) {
+	    throw new NotificationDaoException(e.getMessage());
+	}
     }
 
 }

@@ -1,6 +1,7 @@
 package com.blackducksoftware.tools.testhubclient.dao.hub;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -15,9 +16,13 @@ import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
+import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
+import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
+import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -73,6 +78,48 @@ public class HubNotificationDaoTest {
 	List<NotificationItem> notifs = notifResponse.getItems();
 	for (NotificationItem notif : notifs) {
 	    System.out.println(notif);
+	}
+    }
+
+    @Test
+    public void testGetFromRelativeUrlJsonObject() throws Exception {
+	List<String> urlSegments = new ArrayList<>();
+	urlSegments.add("api");
+	urlSegments.add("notifications");
+
+	Set<NameValuePair> queryParameters = new HashSet<>();
+	queryParameters.add(new NameValuePair("startDate",
+		"2016-05-01T00:00:00.000Z"));
+	queryParameters.add(new NameValuePair("endDate",
+		"2016-05-05T00:00:00.000Z"));
+	queryParameters.add(new NameValuePair("limit", "100"));
+	NotificationResponse notifResponse = hub.getFromRelativeUrl(
+		NotificationResponse.class, urlSegments, queryParameters);
+	Gson gson = new GsonBuilder().create(); // TODO re-usable?
+	JsonObject jsonObject = notifResponse.getJsonObject();
+	JsonArray array = jsonObject.get("items").getAsJsonArray();
+
+	for (JsonElement elem : array) {
+	    NotificationItem genericNotif = gson.fromJson(elem,
+		    NotificationItem.class);
+	    if ("VULNERABILITY".equals(genericNotif.getType())) {
+		VulnerabilityNotificationItem vulnerabilityNotif = gson
+			.fromJson(elem, VulnerabilityNotificationItem.class);
+		System.out.println(vulnerabilityNotif);
+		assertTrue(vulnerabilityNotif.getContent()
+			.getNewVulnerabilityCount() > 0);
+	    } else if ("RULE_VIOLATION".equals(genericNotif.getType())) {
+		RuleViolationNotificationItem ruleViolationNotif = gson
+			.fromJson(elem, RuleViolationNotificationItem.class);
+		System.out.println(ruleViolationNotif);
+		assertTrue(ruleViolationNotif.getContent()
+			.getComponentVersionStatuses().size() > 0);
+	    } else if ("POLICY_OVERRIDE".equals(genericNotif.getType())) {
+		PolicyOverrideNotificationItem policyOverrideNotif = gson
+			.fromJson(elem, PolicyOverrideNotificationItem.class);
+		System.out.println(policyOverrideNotif);
+		assertTrue(policyOverrideNotif.getContent().getProjectName() != null);
+	    }
 	}
     }
 

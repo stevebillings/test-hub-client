@@ -1,6 +1,8 @@
 package com.blackducksoftware.tools.testhubclient.model.policy;
 
-public class PolicyStatus {
+import com.blackducksoftware.tools.testhubclient.model.ModelClass;
+
+public class PolicyStatus extends ModelClass {
     private String overallStatus;
     private String updatedAt;
 

@@ -14,11 +14,11 @@ public interface NotificationDao {
 
     <T extends ModelClass> T getFromRelativeUrl(Class<T> modelClass,
 	    List<String> urlSegments, Set<NameValuePair> queryParameters)
-	    throws Exception;
+	    throws NotificationDaoException;
 
     <T extends ModelClass> T getFromUrl(Class<T> modelClass, String url)
-	    throws Exception;
+	    throws NotificationDaoException;
 
     <T extends ModelClass> T getFromJsonElement(Class<T> modelClass, Gson gson,
-	    JsonElement elem) throws Exception;
+	    JsonElement elem) throws NotificationDaoException;
 }

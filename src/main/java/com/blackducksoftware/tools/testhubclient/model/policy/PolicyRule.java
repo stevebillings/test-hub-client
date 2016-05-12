@@ -1,6 +1,8 @@
 package com.blackducksoftware.tools.testhubclient.model.policy;
 
-public class PolicyRule {
+import com.blackducksoftware.tools.testhubclient.model.ModelClass;
+
+public class PolicyRule extends ModelClass {
     private String name;
 
     public String getName() {

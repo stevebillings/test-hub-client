@@ -1,9 +1,10 @@
 package com.blackducksoftware.tools.testhubclient.model.policy;
 
 import com.blackducksoftware.tools.testhubclient.model.Link;
+import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.google.gson.annotations.SerializedName;
 
-public class ApprovalStatus {
+public class ApprovalStatus extends ModelClass {
     private String approvalStatus;
 
     @SerializedName("_meta")

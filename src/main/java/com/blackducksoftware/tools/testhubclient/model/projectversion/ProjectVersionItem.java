@@ -1,9 +1,10 @@
 package com.blackducksoftware.tools.testhubclient.model.projectversion;
 
 import com.blackducksoftware.tools.testhubclient.model.Link;
+import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.google.gson.annotations.SerializedName;
 
-public class ProjectVersionItem {
+public class ProjectVersionItem extends ModelClass {
     private String versionName;
     private String phase;
     private String distribution;
