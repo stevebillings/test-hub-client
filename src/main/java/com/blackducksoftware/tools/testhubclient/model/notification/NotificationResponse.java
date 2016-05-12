@@ -16,6 +16,14 @@ public class NotificationResponse extends ModelClass {
 	return items;
     }
 
+    public void setTotalCount(String totalCount) {
+	this.totalCount = totalCount;
+    }
+
+    public void setItems(List<NotificationItem> items) {
+	this.items = items;
+    }
+
     @Override
     public String toString() {
 	return "NotificationResponse [totalCount=" + totalCount + ", items="

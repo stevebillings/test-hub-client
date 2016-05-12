@@ -12,10 +12,6 @@ public class NotificationItem extends ModelClass {
     @SerializedName("_meta")
     public com.blackducksoftware.tools.testhubclient.model.notification.NotificationMeta Meta;
 
-    // public VulnerabilityNotificationContent getContent() {
-    // return content;
-    // }
-
     public String getContentType() {
 	return contentType;
     }
@@ -30,6 +26,23 @@ public class NotificationItem extends ModelClass {
 
     public com.blackducksoftware.tools.testhubclient.model.notification.NotificationMeta getMeta() {
 	return Meta;
+    }
+
+    public void setContentType(String contentType) {
+	this.contentType = contentType;
+    }
+
+    public void setType(String type) {
+	this.type = type;
+    }
+
+    public void setCreatedAt(String createdAt) {
+	this.createdAt = createdAt;
+    }
+
+    public void setMeta(
+	    com.blackducksoftware.tools.testhubclient.model.notification.NotificationMeta meta) {
+	Meta = meta;
     }
 
     @Override
