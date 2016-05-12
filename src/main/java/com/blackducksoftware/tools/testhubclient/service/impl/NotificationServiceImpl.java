@@ -15,6 +15,7 @@ import com.blackducksoftware.tools.testhubclient.model.notification.Notification
 import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
+import com.blackducksoftware.tools.testhubclient.model.policy.PolicyStatus;
 import com.blackducksoftware.tools.testhubclient.service.NotificationService;
 import com.blackducksoftware.tools.testhubclient.service.NotificationServiceException;
 import com.google.gson.JsonArray;
@@ -34,8 +35,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<NotificationItem> getNotifications(String startDate,
-	    String endDate, int limit) throws NotificationDaoException,
-	    NotificationServiceException {
+	    String endDate, int limit) throws NotificationServiceException {
 
 	List<String> urlSegments = new ArrayList<>();
 	urlSegments.add("api");
@@ -45,8 +45,13 @@ public class NotificationServiceImpl implements NotificationService {
 	queryParameters.add(new NameValuePair("startDate", startDate));
 	queryParameters.add(new NameValuePair("endDate", endDate));
 	queryParameters.add(new NameValuePair("limit", String.valueOf(limit)));
-	NotificationResponse notifResponse = dao.getFromRelativeUrl(
-		NotificationResponse.class, urlSegments, queryParameters);
+	NotificationResponse notifResponse;
+	try {
+	    notifResponse = dao.getFromRelativeUrl(NotificationResponse.class,
+		    urlSegments, queryParameters);
+	} catch (NotificationDaoException e) {
+	    throw new NotificationServiceException(e);
+	}
 
 	// Since we don't know the type of each item in advance, we
 	// re-parse each into a type-specific object
@@ -82,6 +87,16 @@ public class NotificationServiceImpl implements NotificationService {
 	}
 
 	return notificationItems;
+    }
+
+    @Override
+    public PolicyStatus getPolicyStatusFromLink(String url)
+	    throws NotificationServiceException {
+	try {
+	    return dao.getFromAbsoluteUrl(PolicyStatus.class, url);
+	} catch (NotificationDaoException e) {
+	    throw new NotificationServiceException(e);
+	}
     }
 
 }

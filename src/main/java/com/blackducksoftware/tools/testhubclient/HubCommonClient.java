@@ -25,6 +25,7 @@ import com.blackducksoftware.tools.testhubclient.model.policy.PolicyStatus;
 import com.blackducksoftware.tools.testhubclient.model.projectversion.ProjectVersion;
 import com.blackducksoftware.tools.testhubclient.model.projectversion.ProjectVersionItem;
 import com.blackducksoftware.tools.testhubclient.service.NotificationService;
+import com.blackducksoftware.tools.testhubclient.service.NotificationServiceException;
 import com.blackducksoftware.tools.testhubclient.service.impl.NotificationServiceImpl;
 
 public class HubCommonClient {
@@ -67,8 +68,7 @@ public class HubCommonClient {
     public Statistics run(String startDate, String endDate, int limit)
 	    throws Exception {
 
-	int notificationCount = processNotifications(dao, startDate, endDate,
-		limit);
+	int notificationCount = processNotifications(startDate, endDate, limit);
 
 	log.info("Done processsing " + notificationCount
 		+ " notifications, generating " + ticketCount + " tickets, "
@@ -78,8 +78,8 @@ public class HubCommonClient {
 
     }
 
-    private int processNotifications(NotificationDao dao, String startDate,
-	    String endDate, int limit) throws Exception {
+    private int processNotifications(String startDate, String endDate, int limit)
+	    throws Exception {
 
 	List<NotificationItem> notificationItems = svc.getNotifications(
 		startDate, endDate, limit);
@@ -102,53 +102,6 @@ public class HubCommonClient {
 	    }
 	}
 	return notificationItems.size();
-
-	// List<String> urlSegments = new ArrayList<>();
-	// urlSegments.add("api");
-	// urlSegments.add("notifications");
-	//
-	// Set<NameValuePair> queryParameters = new HashSet<>();
-	// queryParameters.add(new NameValuePair("startDate", startDate));
-	// queryParameters.add(new NameValuePair("endDate", endDate));
-	// queryParameters.add(new NameValuePair("limit",
-	// String.valueOf(limit)));
-	// NotificationResponse notifResponse = dao.getFromRelativeUrl(
-	// NotificationResponse.class, urlSegments, queryParameters);
-	//
-	// // Since we don't know the type of each item in advance, we
-	// // re-parse each into a type-specific object
-	// JsonObject jsonObject = notifResponse.getJsonObject();
-	//
-	// JsonArray array = jsonObject.get("items").getAsJsonArray();
-	//
-	// for (JsonElement elem : array) {
-	// NotificationItem genericNotif = jsonModelParser.parse(
-	// NotificationItem.class, elem);
-	// // gson.fromJson(elem, NotificationItem.class);
-	// String notificationTimeStamp = genericNotif.getCreatedAt();
-	// log.info("\n\n======================================================================\n"
-	// + "NotificationItem: " + genericNotif);
-	// if ("VULNERABILITY".equals(genericNotif.getType())) {
-	// VulnerabilityNotificationItem vulnNotif = jsonModelParser
-	// .parse(VulnerabilityNotificationItem.class, elem);
-	// processVulnerabilityNotification(notificationTimeStamp,
-	// vulnNotif);
-	// } else if ("RULE_VIOLATION".equals(genericNotif.getType())) {
-	// RuleViolationNotificationItem ruleViolationNotif = jsonModelParser
-	// .parse(RuleViolationNotificationItem.class, elem);
-	// processRuleViolationNotification(notificationTimeStamp,
-	// ruleViolationNotif);
-	// } else if ("POLICY_OVERRIDE".equals(genericNotif.getType())) {
-	// PolicyOverrideNotificationItem policyOverrideNotif = jsonModelParser
-	// .parse(PolicyOverrideNotificationItem.class, elem);
-	// processPolicyOverrideNotification(notificationTimeStamp,
-	// policyOverrideNotif);
-	// } else {
-	// log.error("Unknown notification type: "
-	// + genericNotif.getType() + ": " + genericNotif);
-	// }
-	// }
-
     }
 
     private void processPolicyOverrideNotification(
@@ -206,9 +159,8 @@ public class HubCommonClient {
 
 	PolicyStatus policyStatus = null;
 	try {
-	    policyStatus = dao.getFromAbsoluteUrl(PolicyStatus.class,
-		    compPolicyStatusLink);
-	} catch (NotificationDaoException e) {
+	    policyStatus = svc.getPolicyStatusFromLink(compPolicyStatusLink);
+	} catch (NotificationServiceException e) {
 	    log.warn("Error getting policy status from " + compPolicyStatusLink
 		    + ": " + e.getMessage()
 		    + "; This component was probably removed from this BOM");
