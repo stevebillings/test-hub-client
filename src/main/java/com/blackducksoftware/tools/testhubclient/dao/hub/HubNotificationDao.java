@@ -89,7 +89,7 @@ public class HubNotificationDao implements NotificationDao {
 	return resource;
     }
 
-    public <T extends ModelClass> T getFromUrl(Class<T> modelClass, String url)
+    public <T extends ModelClass> T getFromAbsoluteUrl(Class<T> modelClass, String url)
 	    throws NotificationDaoException {
 
 	if (url == null) {

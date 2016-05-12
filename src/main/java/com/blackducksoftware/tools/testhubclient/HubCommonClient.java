@@ -1,8 +1,6 @@
 package com.blackducksoftware.tools.testhubclient;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,8 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.restlet.Response;
 
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
@@ -41,31 +37,35 @@ import com.google.gson.JsonObject;
 public class HubCommonClient {
 
     public static void main(String[] args) throws Exception {
-	HubCommonClient client = new HubCommonClient();
-	client.run("http://eng-hub-valid03.dc1.lan",
-		"2016-05-01T00:00:00.000Z", "2016-07-30T00:00:00.000Z", 1000);
+
+	System.out.println("Starting up...");
+
+	String username = "sysadmin";
+	String password = "blackduck";
+
+	NotificationDao dao = new HubNotificationDao(
+		"http://eng-hub-valid03.dc1.lan", username, password);
+	HubCommonClient client = new HubCommonClient(dao);
+	client.run("2016-05-01T00:00:00.000Z", "2016-07-30T00:00:00.000Z", 10);
     }
 
-    private ClientLogger log;
-    private NotificationDao dao;
+    private final ClientLogger log;
+    private final NotificationDao dao;
 
     private Map<Integer, JiraTicket> tickets = new HashMap<>();
 
     private int duplicateCount = 0;
     private int ticketCount = 0;
 
-    public Statistics run(String hubUrl, String startDate, String endDate,
-	    int limit) throws Exception {
+    public HubCommonClient(NotificationDao dao) throws Exception {
+	this.dao = dao;
 	log = new ClientLogger();
-	log.info("Starting up...");
-
-	String username = "sysadmin";
-	String password = "blackduck";
-
-	dao = new HubNotificationDao(hubUrl, username, password);
-
 	String hubVersion = dao.getVersion();
 	log.info("Hub version: " + hubVersion);
+    }
+
+    public Statistics run(String startDate, String endDate, int limit)
+	    throws Exception {
 
 	int notificationCount = processNotifications(dao, startDate, endDate,
 		limit);
@@ -173,9 +173,6 @@ public class HubCommonClient {
 		.getComponentName();
 	String componentVersion = policyOverrideNotif.getContent()
 		.getComponentVersionName();
-	// String firstName = policyOverrideNotif.getContent().getFirstName();
-	// // always empty
-	// String lastName = policyOverrideNotif.getContent().getLastName();
 	String compPolicyStatusLink = policyOverrideNotif.getContent()
 		.getBomComponentVersionPolicyStatus();
 	PolicyStatus compPolicyStatus = getCompPolicyStatusFromLink(compPolicyStatusLink);
@@ -225,7 +222,7 @@ public class HubCommonClient {
 
 	PolicyStatus policyStatus = null;
 	try {
-	    policyStatus = dao.getFromUrl(PolicyStatus.class,
+	    policyStatus = dao.getFromAbsoluteUrl(PolicyStatus.class,
 		    compPolicyStatusLink);
 	} catch (NotificationDaoException e) {
 	    log.warn("Error getting policy status from " + compPolicyStatusLink
@@ -242,8 +239,7 @@ public class HubCommonClient {
 	String projectName = ruleViolationNotif.getContent().getProjectName();
 	String projectVersionName = ruleViolationNotif.getContent()
 		.getProjectVersionName();
-	// String componentVersionsInViolation = ruleViolationNotif.getContent()
-	// .getComponentVersionsInViolation();
+
 	List<ComponentVersionStatus> compStatuses = ruleViolationNotif
 		.getContent().getComponentVersionStatuses();
 	for (ComponentVersionStatus compStatus : compStatuses) {
@@ -273,32 +269,13 @@ public class HubCommonClient {
 
 	ComponentVersion componentVersion;
 	try {
-	    componentVersion = dao.getFromUrl(ComponentVersion.class,
+	    componentVersion = dao.getFromAbsoluteUrl(ComponentVersion.class,
 		    componentVersionLink);
 	} catch (NotificationDaoException e) {
 	    throw new NotificationDaoException(
 		    "Error getting component version name: " + e.getMessage());
 	}
 	return componentVersion.getVersionName();
-
-	// final ClientResource resource =
-	// createGetClientResourceWithGivenLink(componentVersionLink);
-	// log.debug("Resource: " + resource);
-	// int responseCode = resource.getResponse().getStatus().getCode();
-	// if (responseCode == 200 || responseCode == 204 || responseCode ==
-	// 202) {
-	// log.debug("SUCCESS getting componentVersion");
-	// final String response = readResponseAsString(resource.getResponse());
-	//
-	// Gson gson = new GsonBuilder().create();
-	// JsonParser parser = new JsonParser();
-	// JsonObject json = parser.parse(response).getAsJsonObject();
-	//
-	// ComponentVersion componentVersion = gson.fromJson(json,
-	// ComponentVersion.class);
-	// return componentVersion.getVersionName();
-	// }
-	// throw new Exception("Error getting component version name");
     }
 
     private void processPolicyViolation(String notificationTimeStamp,
@@ -307,7 +284,7 @@ public class HubCommonClient {
 	    String componentName, String componentVersion) throws Exception {
 
 	try {
-	    ApprovalStatus policyStatus = dao.getFromUrl(ApprovalStatus.class,
+	    ApprovalStatus policyStatus = dao.getFromAbsoluteUrl(ApprovalStatus.class,
 		    policyStatusLink);
 	    log.info("Approval Status: " + policyStatus);
 	    if ("NOT_IN_VIOLATION".equals(policyStatus.getApprovalStatus())) {
@@ -323,38 +300,6 @@ public class HubCommonClient {
 		    + ": " + e.getMessage()
 		    + "; This component was probably removed from this BOM");
 	}
-
-	// final ClientResource resource =
-	// createGetClientResourceWithGivenLink(policyStatusLink);
-	// log.debug("Resource: " + resource);
-	// int responseCode = resource.getResponse().getStatus().getCode();
-	// if (responseCode == 200 || responseCode == 204 || responseCode ==
-	// 202) {
-	// log.info("SUCCESS getting policyStatus");
-	// final String response = readResponseAsString(resource.getResponse());
-	//
-	// Gson gson = new GsonBuilder().create();
-	// JsonParser parser = new JsonParser();
-	// JsonObject json = parser.parse(response).getAsJsonObject();
-	//
-	// ApprovalStatus policyStatus = gson.fromJson(json,
-	// ApprovalStatus.class);
-	// log.info("Approval Status: " + policyStatus);
-	// if ("NOT_IN_VIOLATION".equals(policyStatus.getApprovalStatus())) {
-	// log.info("Not generating a ticket");
-	// return; // don't need a ticket if it's not in violation
-	// }
-	// String policyLink = policyStatus.getLink("policy-rule");
-	// processPolicy(notificationTimeStamp, ruleViolationNotificationItem,
-	// policyLink, projectName, projectVersion, componentName,
-	// componentVersion);
-	// } else {
-	// log.warn("Error getting policy status from " + policyStatusLink
-	// + ": " + responseCode
-	// + "; This component was probably removed from this BOM");
-	//
-	// return;
-	// }
     }
 
     private void processPolicy(String notificationTimeStamp,
@@ -377,7 +322,7 @@ public class HubCommonClient {
 
 	try {
 	    PolicyRule policyRule = dao
-		    .getFromUrl(PolicyRule.class, policyLink);
+		    .getFromAbsoluteUrl(PolicyRule.class, policyLink);
 	    String policyRuleName = policyRule.getName();
 
 	    JiraTicket jiraTicket = new JiraTicket(notificationTimeStamp,
@@ -389,31 +334,6 @@ public class HubCommonClient {
 	} catch (NotificationDaoException e) {
 	    log.error("Error getting violated rule name");
 	}
-
-	// final ClientResource resource =
-	// createGetClientResourceWithGivenLink(policyLink);
-	// log.debug("Resource: " + resource);
-	// int responseCode = resource.getResponse().getStatus().getCode();
-	// if (responseCode == 200 || responseCode == 204 || responseCode ==
-	// 202) {
-	// log.info("SUCCESS getting policy");
-	// final String response = readResponseAsString(resource.getResponse());
-	//
-	// Gson gson = new GsonBuilder().create();
-	// JsonParser parser = new JsonParser();
-	// JsonObject json = parser.parse(response).getAsJsonObject();
-	// PolicyRule policyRule = gson.fromJson(json, PolicyRule.class);
-	// String policyRuleName = policyRule.getName();
-	//
-	// JiraTicket jiraTicket = new JiraTicket(notificationTimeStamp,
-	// JiraTicketType.RULE_VIOLATION, projectName, projectVersion,
-	// componentName, componentVersion, null, policyRuleName,
-	// ActionRequired.REVIEW);
-	// System.out.println(jiraTicket);
-	// addToMap(jiraTicket);
-	// } else {
-	// log.error("Error getting violated rule name");
-	// }
     }
 
     private void processVulnerabilityNotification(String notificationTimeStamp,
@@ -447,7 +367,7 @@ public class HubCommonClient {
 	    String targetComponentName, String targetComponentVersion)
 	    throws URISyntaxException, IOException, NotificationDaoException {
 
-	ProjectVersionItem versionItem = dao.getFromUrl(
+	ProjectVersionItem versionItem = dao.getFromAbsoluteUrl(
 		ProjectVersionItem.class, projectVersionLink);
 
 	String vulnerableComponentsLink = versionItem
@@ -457,32 +377,6 @@ public class HubCommonClient {
 		vulnerableComponentsLink, projectName,
 		versionItem.getVersionName(), targetComponentName,
 		targetComponentVersion);
-
-	// final ClientResource resource =
-	// createGetClientResourceWithGivenLink(projectVersionLink);
-	// log.debug("Resource: " + resource);
-	// int responseCode = resource.getResponse().getStatus().getCode();
-	// if (responseCode == 200 || responseCode == 204 || responseCode ==
-	// 202) {
-	// log.debug("SUCCESS getting projectVersion");
-	// final String response = readResponseAsString(resource.getResponse());
-	//
-	// Gson gson = new GsonBuilder().create();
-	// JsonParser parser = new JsonParser();
-	// JsonObject json = parser.parse(response).getAsJsonObject();
-	//
-	// ProjectVersionItem versionItem = gson.fromJson(json,
-	// ProjectVersionItem.class);
-	//
-	// String vulnerableComponentsLink = versionItem
-	// .getLink("vulnerable-components");
-	// log.debug("Link to vulnerable components: "
-	// + vulnerableComponentsLink);
-	// processVulnerableComponentsLink(notificationTimeStamp,
-	// vulnerableComponentsLink, projectName,
-	// versionItem.getVersionName(), targetComponentName,
-	// targetComponentVersion);
-	// }
     }
 
     private void processVulnerableComponentsLink(String notificationTimeStamp,
@@ -491,14 +385,9 @@ public class HubCommonClient {
 	    String targetComponentVersion) throws URISyntaxException,
 	    IOException, NotificationDaoException {
 
-	VulnerableComponentsResponse vulnCompsResponse = dao.getFromUrl(
+	VulnerableComponentsResponse vulnCompsResponse = dao.getFromAbsoluteUrl(
 		VulnerableComponentsResponse.class, vulnerableComponentsLink);
-	// JsonObject json = vulnCompsResponse.getJsonObject();
-	// JsonArray array = json.get("items").getAsJsonArray();
-	// log.debug("Got " + array.size() + " vulnerableComponents");
-	// for (JsonElement elem : array) {
-	//
-	// }
+
 	for (VulnerableComponentItem vulnerableComponentItem : vulnCompsResponse
 		.getItems()) {
 	    log.debug(vulnerableComponentItem.toString());
@@ -540,83 +429,5 @@ public class HubCommonClient {
 		addToMap(jiraTicket);
 	    }
 	}
-
-	// final ClientResource resource =
-	// createGetClientResourceWithGivenLink(vulnerableComponentsLink);
-	// log.debug("Resource: " + resource);
-	// int responseCode = resource.getResponse().getStatus().getCode();
-	// if (responseCode == 200 || responseCode == 204 || responseCode ==
-	// 202) {
-	// log.debug("SUCCESS getting vulnerableComponents");
-	// final String response = readResponseAsString(resource.getResponse());
-	// Gson gson = new GsonBuilder().create();
-	// JsonParser parser = new JsonParser();
-	// JsonObject json = parser.parse(response).getAsJsonObject();
-	// JsonArray array = json.get("items").getAsJsonArray();
-	// log.debug("Got " + array.size() + " vulnerableComponents");
-	// for (JsonElement elem : array) {
-	// VulnerableComponentItem vulnerableComponentItem = gson
-	// .fromJson(elem, VulnerableComponentItem.class);
-	// log.debug(vulnerableComponentItem.toString());
-	//
-	// if (!vulnerableComponentItem.getComponentName().equals(
-	// targetComponentName)) {
-	// log.debug("Wrong component name; skipping this one");
-	// continue;
-	// }
-	// if (!vulnerableComponentItem.getComponentVersionName().equals(
-	// targetComponentVersion)) {
-	// log.debug("Wrong component version; skipping this one");
-	// continue;
-	// }
-	// if ("REMEDIATION_REQUIRED".equals(vulnerableComponentItem
-	// .getVulnerabilityWithRemediation()
-	// .getRemediationStatus())) {
-	//
-	// JiraTicket jiraTicket = new JiraTicket(
-	// notificationTimeStamp,
-	// JiraTicketType.VULNERABILITY, projectName,
-	// projectVersionName, targetComponentName,
-	// targetComponentVersion, vulnerableComponentItem
-	// .getVulnerabilityWithRemediation()
-	// .getVulnerabilityName(), null,
-	// ActionRequired.REMEDIATION);
-	// System.out.println(jiraTicket);
-	// addToMap(jiraTicket);
-	// }
-	// if ("NEEDS_REVIEW".equals(vulnerableComponentItem
-	// .getVulnerabilityWithRemediation()
-	// .getRemediationStatus())) {
-	//
-	// JiraTicket jiraTicket = new JiraTicket(
-	// notificationTimeStamp,
-	// JiraTicketType.VULNERABILITY, projectName,
-	// projectVersionName, targetComponentName,
-	// targetComponentVersion, vulnerableComponentItem
-	// .getVulnerabilityWithRemediation()
-	// .getVulnerabilityName(), null,
-	// ActionRequired.REVIEW);
-	// System.out.println(jiraTicket);
-	// addToMap(jiraTicket);
-	// }
-	// }
-	// }
-    }
-
-    private String readResponseAsString(final Response response)
-	    throws IOException {
-	final StringBuilder sb = new StringBuilder();
-	final Reader reader = response.getEntity().getReader();
-	final BufferedReader bufReader = new BufferedReader(reader);
-	try {
-	    String line;
-	    while ((line = bufReader.readLine()) != null) {
-		sb.append(line);
-		sb.append("\n");
-	    }
-	} finally {
-	    bufReader.close();
-	}
-	return sb.toString();
     }
 }

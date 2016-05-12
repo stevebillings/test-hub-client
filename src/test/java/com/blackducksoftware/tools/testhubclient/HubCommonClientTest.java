@@ -6,6 +6,9 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
+import com.blackducksoftware.tools.testhubclient.dao.hub.HubNotificationDao;
+
 public class HubCommonClientTest {
 
     @BeforeClass
@@ -18,9 +21,16 @@ public class HubCommonClientTest {
 
     @Test
     public void test() throws Exception {
-	HubCommonClient client = new HubCommonClient();
-	Statistics stats = client.run("http://eng-hub-valid03.dc1.lan",
-		"2016-05-01T00:00:00.000Z", "2016-05-11T00:00:00.000Z", 1000);
+
+	String username = "sysadmin";
+	String password = "blackduck";
+
+	NotificationDao dao = new HubNotificationDao(
+		"http://eng-hub-valid03.dc1.lan", username, password);
+
+	HubCommonClient client = new HubCommonClient(dao);
+	Statistics stats = client.run("2016-05-01T00:00:00.000Z",
+		"2016-05-11T00:00:00.000Z", 1000);
 	assertEquals(711, stats.getNotificationCount());
 	assertEquals(567, stats.getTicketCount());
 	assertEquals(437, stats.getDuplicateCount());

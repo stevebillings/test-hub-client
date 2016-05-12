@@ -45,7 +45,7 @@ public class HubNotificationDaoTest {
     public void testGetFromUrl() throws Exception {
 
 	NotificationItem notifItem = hub
-		.getFromUrl(
+		.getFromAbsoluteUrl(
 			NotificationItem.class,
 			"http://eng-hub-valid03.dc1.lan/api/notifications/51b42223-c093-4305-b383-ba73a02fcd30");
 	System.out.println(notifItem);

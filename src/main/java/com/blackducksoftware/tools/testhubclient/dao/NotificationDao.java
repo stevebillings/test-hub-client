@@ -16,7 +16,7 @@ public interface NotificationDao {
 	    List<String> urlSegments, Set<NameValuePair> queryParameters)
 	    throws NotificationDaoException;
 
-    <T extends ModelClass> T getFromUrl(Class<T> modelClass, String url)
+    <T extends ModelClass> T getFromAbsoluteUrl(Class<T> modelClass, String url)
 	    throws NotificationDaoException;
 
     <T extends ModelClass> T getFromJsonElement(Class<T> modelClass, Gson gson,
