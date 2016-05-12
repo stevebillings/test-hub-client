@@ -2,15 +2,19 @@ package com.blackducksoftware.tools.testhubclient.dao.hub;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.restlet.data.Cookie;
-import org.restlet.util.Series;
 
-import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
+import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
+import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -18,13 +22,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class HubNotificationDaoTest {
-    private static HubIntRestService svc;
+    private static NotificationDao hub;
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
 
-	svc = new HubIntRestService("http://eng-hub-valid03.dc1.lan");
-	svc.setCookies("sysadmin", "blackduck");
+	hub = new HubNotificationDao("http://eng-hub-valid03.dc1.lan",
+		"sysadmin", "blackduck");
+	System.out.println("Hub version: " + hub.getVersion());
     }
 
     @AfterClass
@@ -34,15 +39,9 @@ public class HubNotificationDaoTest {
     @Test
     public void testGetFromUrl() throws Exception {
 
-	System.out.println("Hub version: " + svc.getHubVersion());
-	Series<Cookie> cookies = svc.getCookies();
-
-	NotificationDao hub = new HubNotificationDao();
-
 	NotificationItem notifItem = hub
 		.getFromUrl(
 			NotificationItem.class,
-			cookies,
 			"http://eng-hub-valid03.dc1.lan/api/notifications/51b42223-c093-4305-b383-ba73a02fcd30");
 	System.out.println(notifItem);
 	assertEquals("application/json", notifItem.getContentType());
@@ -55,6 +54,26 @@ public class HubNotificationDaoTest {
 	assertEquals(
 		"Instantiated via gson from JsonObject fetched from Hub by HubNotificationDao",
 		notifItem.getDescription());
+    }
+
+    @Test
+    public void testGetFromRelativeUrl() throws Exception {
+	List<String> urlSegments = new ArrayList<>();
+	urlSegments.add("api");
+	urlSegments.add("notifications");
+
+	Set<NameValuePair> queryParameters = new HashSet<>();
+	queryParameters.add(new NameValuePair("startDate",
+		"2016-05-01T00:00:00.000Z"));
+	queryParameters.add(new NameValuePair("endDate",
+		"2016-05-02T00:00:00.000Z"));
+	queryParameters.add(new NameValuePair("limit", "1"));
+	NotificationResponse notifResponse = hub.getFromRelativeUrl(
+		NotificationResponse.class, urlSegments, queryParameters);
+	List<NotificationItem> notifs = notifResponse.getItems();
+	for (NotificationItem notif : notifs) {
+	    System.out.println(notif);
+	}
     }
 
     @Test
@@ -86,8 +105,6 @@ public class HubNotificationDaoTest {
 		+ "],\n"
 		+ "\"href\": \"http://eng-hub-valid03.dc1.lan/api/notifications/e5071453-cbae-457f-b84c-9d60c79d0409\"\n"
 		+ "}\n" + "}\n" + "]\n" + "}";
-
-	NotificationDao hub = new HubNotificationDao();
 
 	Gson gson = new GsonBuilder().create();
 	JsonParser parser = new JsonParser();
