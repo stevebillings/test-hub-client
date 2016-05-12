@@ -13,6 +13,7 @@ import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.dao.hub.HubNotificationDao;
+import com.blackducksoftware.tools.testhubclient.json.JsonParser;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.component.ComponentVersion;
 import com.blackducksoftware.tools.testhubclient.model.component.VulnerableComponentItem;
@@ -28,8 +29,6 @@ import com.blackducksoftware.tools.testhubclient.model.policy.PolicyRule;
 import com.blackducksoftware.tools.testhubclient.model.policy.PolicyStatus;
 import com.blackducksoftware.tools.testhubclient.model.projectversion.ProjectVersion;
 import com.blackducksoftware.tools.testhubclient.model.projectversion.ProjectVersionItem;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -51,6 +50,7 @@ public class HubCommonClient {
 
     private final ClientLogger log;
     private final NotificationDao dao;
+    private final JsonParser jsonParser;
 
     private Map<Integer, JiraTicket> tickets = new HashMap<>();
 
@@ -62,6 +62,7 @@ public class HubCommonClient {
 	log = new ClientLogger();
 	String hubVersion = dao.getVersion();
 	log.info("Hub version: " + hubVersion);
+	jsonParser = new JsonParser();
     }
 
     public Statistics run(String startDate, String endDate, int limit)
@@ -96,28 +97,31 @@ public class HubCommonClient {
 	boolean doneProcessingRuleViolationNotifs = false;
 	boolean doneProcessingPolicyOverrideNotifs = false;
 
-	Gson gson = new GsonBuilder().create(); // TODO re-usable?
+	// Since we don't know the type of each item in advance, we
+	// re-parse each into a type-specific object
 	JsonObject jsonObject = notifResponse.getJsonObject();
+
 	JsonArray array = jsonObject.get("items").getAsJsonArray();
 
 	for (JsonElement elem : array) {
-	    NotificationItem genericNotif = gson.fromJson(elem,
-		    NotificationItem.class);
+	    NotificationItem genericNotif = jsonParser.getFromJsonElement(
+		    NotificationItem.class, elem);
+	    // gson.fromJson(elem, NotificationItem.class);
 	    String notificationTimeStamp = genericNotif.getCreatedAt();
 	    log.info("\n\n======================================================================\n"
 		    + "NotificationItem: " + genericNotif);
 	    if ("VULNERABILITY".equals(genericNotif.getType())) {
-		getVulnerabilityNotificationItem(notificationTimeStamp, gson,
-			elem, !doneProcessingVulnNotifs);
+		getVulnerabilityNotificationItem(notificationTimeStamp, elem,
+			!doneProcessingVulnNotifs);
 		// doneProcessingVulnNotifs = true;
 	    } else if ("RULE_VIOLATION".equals(genericNotif.getType())) {
-		getRuleViolationNotificationItem(notificationTimeStamp, gson,
-			elem, !doneProcessingRuleViolationNotifs);
+		getRuleViolationNotificationItem(notificationTimeStamp, elem,
+			!doneProcessingRuleViolationNotifs);
 		// doneProcessingRuleViolationNotifs = true;
 
 	    } else if ("POLICY_OVERRIDE".equals(genericNotif.getType())) {
-		getPolicyOverrideNotificationItem(notificationTimeStamp, gson,
-			elem, !doneProcessingPolicyOverrideNotifs);
+		getPolicyOverrideNotificationItem(notificationTimeStamp, elem,
+			!doneProcessingPolicyOverrideNotifs);
 		// doneProcessingPolicyOverrideNotifs = true;
 	    } else {
 		log.error("I don't know how to parse/print this type: "
@@ -129,10 +133,10 @@ public class HubCommonClient {
     }
 
     private void getVulnerabilityNotificationItem(String notificationTimeStamp,
-	    Gson gson, JsonElement elem, boolean processIt) throws IOException,
+	    JsonElement elem, boolean processIt) throws IOException,
 	    BDRestException, URISyntaxException, NotificationDaoException {
-	VulnerabilityNotificationItem vulnNotif = gson.fromJson(elem,
-		VulnerabilityNotificationItem.class);
+	VulnerabilityNotificationItem vulnNotif = jsonParser
+		.getFromJsonElement(VulnerabilityNotificationItem.class, elem);
 	if (processIt) {
 	    log.debug("======\n" + vulnNotif + "\n-----");
 	    processVulnerabilityNotification(notificationTimeStamp, vulnNotif);
@@ -140,9 +144,9 @@ public class HubCommonClient {
     }
 
     private void getRuleViolationNotificationItem(String notificationTimeStamp,
-	    Gson gson, JsonElement elem, boolean processIt) throws Exception {
-	RuleViolationNotificationItem ruleViolationNotif = gson.fromJson(elem,
-		RuleViolationNotificationItem.class);
+	    JsonElement elem, boolean processIt) throws Exception {
+	RuleViolationNotificationItem ruleViolationNotif = jsonParser
+		.getFromJsonElement(RuleViolationNotificationItem.class, elem);
 	if (processIt) {
 	    log.debug("======\n" + ruleViolationNotif + "\n-----");
 	    processRuleViolationNotification(notificationTimeStamp,
@@ -151,10 +155,10 @@ public class HubCommonClient {
     }
 
     private void getPolicyOverrideNotificationItem(
-	    String notificationTimeStamp, Gson gson, JsonElement elem,
-	    boolean processIt) throws Exception {
-	PolicyOverrideNotificationItem policyOverrideNotif = gson.fromJson(
-		elem, PolicyOverrideNotificationItem.class);
+	    String notificationTimeStamp, JsonElement elem, boolean processIt)
+	    throws Exception {
+	PolicyOverrideNotificationItem policyOverrideNotif = jsonParser
+		.getFromJsonElement(PolicyOverrideNotificationItem.class, elem);
 	if (processIt) {
 	    log.debug("======\n" + policyOverrideNotif + "\n-----");
 	    processPolicyOverrideNotification(notificationTimeStamp,
@@ -284,8 +288,8 @@ public class HubCommonClient {
 	    String componentName, String componentVersion) throws Exception {
 
 	try {
-	    ApprovalStatus policyStatus = dao.getFromAbsoluteUrl(ApprovalStatus.class,
-		    policyStatusLink);
+	    ApprovalStatus policyStatus = dao.getFromAbsoluteUrl(
+		    ApprovalStatus.class, policyStatusLink);
 	    log.info("Approval Status: " + policyStatus);
 	    if ("NOT_IN_VIOLATION".equals(policyStatus.getApprovalStatus())) {
 		log.info("Not generating a ticket");
@@ -321,8 +325,8 @@ public class HubCommonClient {
 	}
 
 	try {
-	    PolicyRule policyRule = dao
-		    .getFromAbsoluteUrl(PolicyRule.class, policyLink);
+	    PolicyRule policyRule = dao.getFromAbsoluteUrl(PolicyRule.class,
+		    policyLink);
 	    String policyRuleName = policyRule.getName();
 
 	    JiraTicket jiraTicket = new JiraTicket(notificationTimeStamp,
@@ -385,8 +389,9 @@ public class HubCommonClient {
 	    String targetComponentVersion) throws URISyntaxException,
 	    IOException, NotificationDaoException {
 
-	VulnerableComponentsResponse vulnCompsResponse = dao.getFromAbsoluteUrl(
-		VulnerableComponentsResponse.class, vulnerableComponentsLink);
+	VulnerableComponentsResponse vulnCompsResponse = dao
+		.getFromAbsoluteUrl(VulnerableComponentsResponse.class,
+			vulnerableComponentsLink);
 
 	for (VulnerableComponentItem vulnerableComponentItem : vulnCompsResponse
 		.getItems()) {

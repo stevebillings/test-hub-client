@@ -25,10 +25,15 @@ import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+/**
+ * Communicates with the Hub to get Notifications and data they point to.
+ * 
+ * @author sbillings
+ *
+ */
 public class HubNotificationDao implements NotificationDao {
     private ClientLogger log = new ClientLogger();
     private HubIntRestService svc;
@@ -89,8 +94,8 @@ public class HubNotificationDao implements NotificationDao {
 	return resource;
     }
 
-    public <T extends ModelClass> T getFromAbsoluteUrl(Class<T> modelClass, String url)
-	    throws NotificationDaoException {
+    public <T extends ModelClass> T getFromAbsoluteUrl(Class<T> modelClass,
+	    String url) throws NotificationDaoException {
 
 	if (url == null) {
 	    return null;
@@ -185,16 +190,6 @@ public class HubNotificationDao implements NotificationDao {
 	}
 	resource.getRequest().setCookies(cookies);
 	return resource;
-    }
-
-    @Override
-    public <T extends ModelClass> T getFromJsonElement(Class<T> modelClass,
-	    Gson gson, JsonElement elem) throws NotificationDaoException {
-	T modelObject = gson.fromJson(elem, modelClass);
-	modelObject
-		.setDescription("Instantiated via gson from JsonElement by HubNotificationDao");
-
-	return modelObject;
     }
 
     @Override
