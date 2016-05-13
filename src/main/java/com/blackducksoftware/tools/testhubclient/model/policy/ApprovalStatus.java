@@ -1,21 +1,13 @@
 package com.blackducksoftware.tools.testhubclient.model.policy;
 
+import com.blackducksoftware.tools.testhubclient.model.ItemWithLinks;
 import com.blackducksoftware.tools.testhubclient.model.Link;
-import com.blackducksoftware.tools.testhubclient.model.ModelClass;
-import com.google.gson.annotations.SerializedName;
 
-public class ApprovalStatus extends ModelClass {
+public class ApprovalStatus extends ItemWithLinks {
     private String approvalStatus;
-
-    @SerializedName("_meta")
-    private ApprovalStatusMeta meta;
 
     public String getApprovalStatus() {
 	return approvalStatus;
-    }
-
-    public ApprovalStatusMeta getMeta() {
-	return meta;
     }
 
     public String getLink(final String linkRel) {
@@ -33,7 +25,7 @@ public class ApprovalStatus extends ModelClass {
     @Override
     public String toString() {
 	return "PolicyStatus [approvalStatus=" + approvalStatus + ", meta="
-		+ meta + "]";
+		+ getMeta() + "]";
     }
 
 }
