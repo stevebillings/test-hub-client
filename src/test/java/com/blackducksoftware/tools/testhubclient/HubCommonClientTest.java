@@ -50,7 +50,7 @@ public class HubCommonClientTest {
 		"2016-05-11T00:00:00.000Z", 1000);
 	assertEquals(711, stats.getNotificationCount());
 	assertEquals(560, stats.getTicketCount());
-	assertEquals(437, stats.getDuplicateCount());
+	assertEquals(433, stats.getDuplicateCount());
     }
 
     @Test
