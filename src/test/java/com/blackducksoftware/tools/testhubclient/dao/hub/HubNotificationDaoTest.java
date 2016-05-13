@@ -20,10 +20,7 @@ import com.blackducksoftware.tools.testhubclient.model.notification.Notification
 import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -94,30 +91,29 @@ public class HubNotificationDaoTest {
 	queryParameters.add(new NameValuePair("endDate",
 		"2016-05-05T00:00:00.000Z"));
 	queryParameters.add(new NameValuePair("limit", "100"));
-	NotificationResponse notifResponse = hub.getFromRelativeUrl(
-		NotificationResponse.class, urlSegments, queryParameters);
-	Gson gson = new GsonBuilder().create(); // TODO re-usable?
-	JsonObject jsonObject = notifResponse.getJsonObject();
-	JsonArray array = jsonObject.get("items").getAsJsonArray();
+	NotificationResponse notifResponse = hub
+		.getAndCacheItemsFromRelativeUrl(NotificationResponse.class,
+			urlSegments, queryParameters);
 
-	for (JsonElement elem : array) {
-	    NotificationItem genericNotif = gson.fromJson(elem,
-		    NotificationItem.class);
+	for (NotificationItem genericNotif : notifResponse.getItems()) {
 	    if ("VULNERABILITY".equals(genericNotif.getType())) {
-		VulnerabilityNotificationItem vulnerabilityNotif = gson
-			.fromJson(elem, VulnerabilityNotificationItem.class);
+		VulnerabilityNotificationItem vulnerabilityNotif = hub
+			.getItemFromCache(VulnerabilityNotificationItem.class,
+				genericNotif.getMeta().getHref());
 		System.out.println(vulnerabilityNotif);
 		assertTrue(vulnerabilityNotif.getContent()
 			.getNewVulnerabilityCount() > 0);
 	    } else if ("RULE_VIOLATION".equals(genericNotif.getType())) {
-		RuleViolationNotificationItem ruleViolationNotif = gson
-			.fromJson(elem, RuleViolationNotificationItem.class);
+		RuleViolationNotificationItem ruleViolationNotif = hub
+			.getItemFromCache(RuleViolationNotificationItem.class,
+				genericNotif.getMeta().getHref());
 		System.out.println(ruleViolationNotif);
 		assertTrue(ruleViolationNotif.getContent()
 			.getComponentVersionStatuses().size() > 0);
 	    } else if ("POLICY_OVERRIDE".equals(genericNotif.getType())) {
-		PolicyOverrideNotificationItem policyOverrideNotif = gson
-			.fromJson(elem, PolicyOverrideNotificationItem.class);
+		PolicyOverrideNotificationItem policyOverrideNotif = hub
+			.getItemFromCache(PolicyOverrideNotificationItem.class,
+				genericNotif.getMeta().getHref());
 		System.out.println(policyOverrideNotif);
 		assertTrue(policyOverrideNotif.getContent().getProjectName() != null);
 	    }

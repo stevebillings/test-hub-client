@@ -16,6 +16,14 @@ public class Meta {
 	return href;
     }
 
+    public void setAllow(List<String> allow) {
+	this.allow = allow;
+    }
+
+    public void setHref(String href) {
+	this.href = href;
+    }
+
     @Override
     public String toString() {
 	return "Meta [allow=" + allow + ", href=" + href + "]";

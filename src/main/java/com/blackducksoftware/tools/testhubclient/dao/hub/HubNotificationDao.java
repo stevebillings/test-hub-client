@@ -74,8 +74,6 @@ public class HubNotificationDao implements NotificationDao {
 	    modelObject
 		    .setDescription("Instantiated via gson from JsonObject fetched from Hub by HubNotificationDao");
 
-	    modelObject.setJsonObject(json);
-
 	    return modelObject;
 	} else {
 	    throw new NotificationDaoException(
@@ -105,8 +103,6 @@ public class HubNotificationDao implements NotificationDao {
 	    modelObject
 		    .setDescription("Instantiated via gson from JsonObject fetched from Hub by HubNotificationDao");
 
-	    modelObject.setJsonObject(json);
-
 	    JsonArray array = json.get("items").getAsJsonArray();
 	    for (JsonElement elem : array) {
 		Item genericItem = jsonModelParser.parse(Item.class, elem);
@@ -128,7 +124,12 @@ public class HubNotificationDao implements NotificationDao {
     @Override
     public <T extends Item> T getItemFromCache(Class<T> itemClass,
 	    String itemUrl) throws NotificationDaoException {
-	// TODO check that it's in cache, and throw helpful exception
+	if (!itemJsonCache.containsKey(itemUrl)) {
+	    throw new NotificationDaoException(
+		    "Item with URL "
+			    + itemUrl
+			    + " is not in cache. Make sure it was fetched via getAndCacheItemsFromRelativeUrl(...)");
+	}
 	T item = jsonModelParser.parse(itemClass, itemJsonCache.get(itemUrl));
 	return item;
 

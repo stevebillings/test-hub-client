@@ -7,15 +7,18 @@ import java.util.Set;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.model.Item;
+import com.blackducksoftware.tools.testhubclient.model.Meta;
 import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
+import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
+import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
 
 public class MockNotificationDao implements NotificationDao {
 
+    private static final String TEST_ITEM_URL = "testItemUrl";
     private final String notificationsJsonString = "{\n"
 	    + "\"totalCount\": 6,\n"
 	    + "\"items\": [\n"
@@ -61,13 +64,12 @@ public class MockNotificationDao implements NotificationDao {
 	    List<NotificationItem> notificationItems = new ArrayList<>();
 	    NotificationItem notif = new NotificationItem();
 	    notif.setType("VULNERABILITY");
+	    Meta meta = new Meta();
+	    meta.setHref(TEST_ITEM_URL);
+	    notif.setMeta(meta);
 	    notificationItems.add(notif);
 	    notifResponse.setItems(notificationItems);
 
-	    JsonParser parser = new JsonParser();
-	    JsonObject jsonObject = parser.parse(notificationsJsonString)
-		    .getAsJsonObject();
-	    notifResponse.setJsonObject(jsonObject);
 	    return (T) (notifResponse);
 	} else if (modelClass == NotificationItem.class) {
 	    NotificationItem notif = new NotificationItem();
@@ -91,15 +93,38 @@ public class MockNotificationDao implements NotificationDao {
     public <T extends ModelClass> T getAndCacheItemsFromRelativeUrl(
 	    Class<T> modelClass, List<String> urlSegments,
 	    Set<NameValuePair> queryParameters) throws NotificationDaoException {
-	// TODO Auto-generated method stub
-	return null;
+
+	return getFromRelativeUrl(modelClass, urlSegments, queryParameters);
     }
 
     @Override
     public <T extends Item> T getItemFromCache(Class<T> itemClass,
 	    String itemUrl) throws NotificationDaoException {
-	// TODO Auto-generated method stub
-	return null;
+	if ((itemClass == VulnerabilityNotificationItem.class)
+		&& (TEST_ITEM_URL.equals(itemUrl))) {
+	    VulnerabilityNotificationItem item = new VulnerabilityNotificationItem();
+	    item.setContentType("testItemCreatedAt");
+	    item.setDescription("mock item");
+	    item.setType("VULNERABILITY");
+	    return (T) (item);
+	} else if ((itemClass == RuleViolationNotificationItem.class)
+		&& (TEST_ITEM_URL.equals(itemUrl))) {
+	    RuleViolationNotificationItem item = new RuleViolationNotificationItem();
+	    item.setContentType("testItemCreatedAt");
+	    item.setDescription("mock item");
+	    item.setType("RULE_VIOLATION");
+	    return (T) (item);
+	} else if ((itemClass == PolicyOverrideNotificationItem.class)
+		&& (TEST_ITEM_URL.equals(itemUrl))) {
+	    PolicyOverrideNotificationItem item = new PolicyOverrideNotificationItem();
+	    item.setContentType("testItemCreatedAt");
+	    item.setDescription("mock item");
+	    item.setType("RULE_VIOLATION");
+	    return (T) (item);
+	} else {
+	    throw new NotificationDaoException("Item with URL " + itemUrl
+		    + " is not in mock cache");
+	}
     }
 
 }
