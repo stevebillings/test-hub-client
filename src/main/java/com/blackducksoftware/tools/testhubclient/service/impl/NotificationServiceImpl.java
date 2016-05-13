@@ -9,14 +9,13 @@ import com.blackducksoftware.tools.testhubclient.ClientLogger;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
+import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
-import com.blackducksoftware.tools.testhubclient.model.component.ComponentVersion;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
 import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
-import com.blackducksoftware.tools.testhubclient.model.policy.PolicyStatus;
 import com.blackducksoftware.tools.testhubclient.service.NotificationService;
 import com.blackducksoftware.tools.testhubclient.service.NotificationServiceException;
 import com.google.gson.JsonArray;
@@ -99,16 +98,6 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public PolicyStatus getPolicyStatusFromLink(String url)
-	    throws NotificationServiceException {
-	try {
-	    return dao.getFromAbsoluteUrl(PolicyStatus.class, url);
-	} catch (NotificationDaoException e) {
-	    throw new NotificationServiceException(e);
-	}
-    }
-
-    @Override
     public String getVersion() throws NotificationServiceException {
 	try {
 	    return dao.getVersion();
@@ -118,17 +107,16 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public ComponentVersion getComponentVersionFromLink(String url)
-	    throws NotificationServiceException {
-	ComponentVersion componentVersion;
-	try {
-	    componentVersion = dao.getFromAbsoluteUrl(ComponentVersion.class,
-		    url);
-	} catch (NotificationDaoException e) {
-	    throw new NotificationServiceException(
-		    "Error getting component version name: " + e.getMessage());
+    public <T extends ModelClass> T getFromAbsoluteUrl(Class<T> modelClass,
+	    String url) throws NotificationServiceException {
+	if (url == null) {
+	    throw new NotificationServiceException("URL provided is null");
 	}
-	return componentVersion;
+	try {
+	    return dao.getFromAbsoluteUrl(modelClass, url);
+	} catch (NotificationDaoException e) {
+	    throw new NotificationServiceException(e);
+	}
     }
 
 }

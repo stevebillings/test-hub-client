@@ -8,7 +8,6 @@ import java.util.Map;
 
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
-import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.dao.hub.HubNotificationDao;
 import com.blackducksoftware.tools.testhubclient.model.component.ComponentVersion;
 import com.blackducksoftware.tools.testhubclient.model.component.VulnerableComponentItem;
@@ -39,24 +38,21 @@ public class HubCommonClient {
 	NotificationDao dao = new HubNotificationDao(
 		"http://eng-hub-valid03.dc1.lan", username, password);
 	NotificationService svc = new NotificationServiceImpl(dao);
-	HubCommonClient client = new HubCommonClient(svc, dao);
+	HubCommonClient client = new HubCommonClient(svc);
 
 	client.run("2016-05-01T00:00:00.000Z", "2016-07-30T00:00:00.000Z", 10);
     }
 
     private final ClientLogger log;
     private final NotificationService svc;
-    private final NotificationDao dao;
 
     private Map<Integer, JiraTicket> tickets = new HashMap<>();
 
     private int duplicateCount = 0;
     private int ticketCount = 0;
 
-    public HubCommonClient(NotificationService svc, NotificationDao dao)
-	    throws Exception {
+    public HubCommonClient(NotificationService svc) throws Exception {
 	this.svc = svc;
-	this.dao = dao;
 	log = new ClientLogger();
 	String hubVersion = svc.getVersion();
 	log.info("Hub version: " + hubVersion);
@@ -156,7 +152,8 @@ public class HubCommonClient {
 
 	PolicyStatus policyStatus = null;
 	try {
-	    policyStatus = svc.getPolicyStatusFromLink(compPolicyStatusLink);
+	    policyStatus = svc.getFromAbsoluteUrl(PolicyStatus.class,
+		    compPolicyStatusLink);
 	} catch (NotificationServiceException e) {
 	    log.warn("Error getting policy status from " + compPolicyStatusLink
 		    + ": " + e.getMessage()
@@ -195,8 +192,8 @@ public class HubCommonClient {
 	    return "<null>";
 	}
 
-	ComponentVersion componentVersion = svc
-		.getComponentVersionFromLink(componentVersionLink);
+	ComponentVersion componentVersion = svc.getFromAbsoluteUrl(
+		ComponentVersion.class, componentVersionLink);
 	return componentVersion.getVersionName();
     }
 
@@ -206,7 +203,7 @@ public class HubCommonClient {
 	    String componentName, String componentVersion) throws Exception {
 
 	try {
-	    ApprovalStatus policyStatus = dao.getFromAbsoluteUrl(
+	    ApprovalStatus policyStatus = svc.getFromAbsoluteUrl(
 		    ApprovalStatus.class, policyStatusLink);
 	    log.info("Approval Status: " + policyStatus);
 	    if ("NOT_IN_VIOLATION".equals(policyStatus.getApprovalStatus())) {
@@ -216,7 +213,7 @@ public class HubCommonClient {
 	    processPolicy(notificationTimeStamp, ruleViolationNotificationItem,
 		    policyStatus.getLink("policy-rule"), projectName,
 		    projectVersion, componentName, componentVersion);
-	} catch (NotificationDaoException e) {
+	} catch (NotificationServiceException e) {
 	    log.warn("Error getting policy status from " + policyStatusLink
 		    + ": " + e.getMessage()
 		    + "; This component was probably removed from this BOM");
@@ -242,7 +239,7 @@ public class HubCommonClient {
 	}
 
 	try {
-	    PolicyRule policyRule = dao.getFromAbsoluteUrl(PolicyRule.class,
+	    PolicyRule policyRule = svc.getFromAbsoluteUrl(PolicyRule.class,
 		    policyLink);
 	    JiraTicket jiraTicket = new JiraTicket(notificationTimeStamp,
 		    JiraTicketType.RULE_VIOLATION, projectName, projectVersion,
@@ -250,14 +247,14 @@ public class HubCommonClient {
 		    policyRule.getName(), ActionRequired.REVIEW);
 	    System.out.println(jiraTicket);
 	    addToMap(jiraTicket);
-	} catch (NotificationDaoException e) {
+	} catch (NotificationServiceException e) {
 	    log.error("Error getting violated rule name");
 	}
     }
 
     private void processVulnerabilityNotification(String notificationTimeStamp,
 	    VulnerabilityNotificationItem vulnNotif) throws IOException,
-	    BDRestException, URISyntaxException, NotificationDaoException {
+	    BDRestException, URISyntaxException, NotificationServiceException {
 	log.debug("processVulnerabilityNotification()");
 
 	if (vulnNotif.getContent().getAffectedProjectVersions() == null) {
@@ -278,9 +275,10 @@ public class HubCommonClient {
     private void processProjectVersionLink(String notificationTimeStamp,
 	    String projectVersionLink, String projectName,
 	    String targetComponentName, String targetComponentVersion)
-	    throws URISyntaxException, IOException, NotificationDaoException {
+	    throws URISyntaxException, IOException,
+	    NotificationServiceException {
 
-	ProjectVersionItem versionItem = dao.getFromAbsoluteUrl(
+	ProjectVersionItem versionItem = svc.getFromAbsoluteUrl(
 		ProjectVersionItem.class, projectVersionLink);
 
 	String vulnerableComponentsLink = versionItem
@@ -296,9 +294,9 @@ public class HubCommonClient {
 	    String vulnerableComponentsLink, String projectName,
 	    String projectVersionName, String targetComponentName,
 	    String targetComponentVersion) throws URISyntaxException,
-	    IOException, NotificationDaoException {
+	    IOException, NotificationServiceException {
 
-	VulnerableComponentsResponse vulnCompsResponse = dao
+	VulnerableComponentsResponse vulnCompsResponse = svc
 		.getFromAbsoluteUrl(VulnerableComponentsResponse.class,
 			vulnerableComponentsLink);
 
