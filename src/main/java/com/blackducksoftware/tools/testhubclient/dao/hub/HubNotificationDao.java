@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.restlet.Context;
@@ -21,10 +23,14 @@ import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.tools.testhubclient.ClientLogger;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
+import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
+import com.blackducksoftware.tools.testhubclient.model.Item;
 import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -36,12 +42,16 @@ import com.google.gson.JsonParser;
  */
 public class HubNotificationDao implements NotificationDao {
     private ClientLogger log = new ClientLogger();
-    private HubIntRestService svc;
+    private HubIntRestService hub;
+    private Map<String, JsonElement> itemJsonCache; // URL -> Json Element cache
+    private final JsonModelParser jsonModelParser;
 
     public HubNotificationDao(String hubUrl, String username, String password)
 	    throws HubIntegrationException, URISyntaxException, BDRestException {
-	svc = new HubIntRestService(hubUrl);
-	svc.setCookies(username, password);
+	hub = new HubIntRestService(hubUrl);
+	hub.setCookies(username, password);
+	itemJsonCache = new HashMap<>();
+	jsonModelParser = new JsonModelParser();
     }
 
     @Override
@@ -63,7 +73,9 @@ public class HubNotificationDao implements NotificationDao {
 	    T modelObject = gson.fromJson(json, modelClass);
 	    modelObject
 		    .setDescription("Instantiated via gson from JsonObject fetched from Hub by HubNotificationDao");
+
 	    modelObject.setJsonObject(json);
+
 	    return modelObject;
 	} else {
 	    throw new NotificationDaoException(
@@ -73,11 +85,60 @@ public class HubNotificationDao implements NotificationDao {
 	}
     }
 
+    @Override
+    public <T extends ModelClass> T getAndCacheItemsFromRelativeUrl(
+	    Class<T> modelClass, List<String> urlSegments,
+	    Set<NameValuePair> queryParameters) throws NotificationDaoException {
+
+	final ClientResource resource = createClientResourceForGet(urlSegments,
+		queryParameters);
+	log.info("Resource: " + resource);
+	int responseCode = resource.getResponse().getStatus().getCode();
+
+	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
+	    final String response = readResponseAsString(resource.getResponse());
+
+	    Gson gson = new GsonBuilder().create();
+	    JsonParser parser = new JsonParser();
+	    JsonObject json = parser.parse(response).getAsJsonObject();
+	    T modelObject = gson.fromJson(json, modelClass);
+	    modelObject
+		    .setDescription("Instantiated via gson from JsonObject fetched from Hub by HubNotificationDao");
+
+	    modelObject.setJsonObject(json);
+
+	    JsonArray array = json.get("items").getAsJsonArray();
+	    for (JsonElement elem : array) {
+		Item genericItem = jsonModelParser.parse(Item.class, elem);
+		String itemUrl = genericItem.getMeta().getHref();
+		log.info("Caching: Key: " + itemUrl + "; Value: "
+			+ elem.toString());
+		itemJsonCache.put(itemUrl, elem);
+	    }
+
+	    return modelObject;
+	} else {
+	    throw new NotificationDaoException(
+		    "Error getting resource from relative url segments "
+			    + urlSegments + " and query parameters "
+			    + queryParameters + "; errorCode: " + responseCode);
+	}
+    }
+
+    @Override
+    public <T extends Item> T getItemFromCache(Class<T> itemClass,
+	    String itemUrl) throws NotificationDaoException {
+	// TODO check that it's in cache, and throw helpful exception
+	T item = jsonModelParser.parse(itemClass, itemJsonCache.get(itemUrl));
+	return item;
+
+    }
+
     private ClientResource createClientResourceForGet(List<String> urlSegments,
 	    Set<NameValuePair> queryParameters) throws NotificationDaoException {
 	ClientResource resource;
 	try {
-	    resource = svc.createClientResource();
+	    resource = hub.createClientResource();
 	} catch (URISyntaxException e) {
 	    throw new NotificationDaoException(e.getMessage());
 	}
@@ -102,7 +163,7 @@ public class HubNotificationDao implements NotificationDao {
 	}
 
 	final ClientResource resource = createGetClientResourceWithGivenLink(
-		svc.getCookies(), url);
+		hub.getCookies(), url);
 
 	log.debug("Resource: " + resource);
 	int responseCode = resource.getResponse().getStatus().getCode();
@@ -195,7 +256,7 @@ public class HubNotificationDao implements NotificationDao {
     @Override
     public String getVersion() throws NotificationDaoException {
 	try {
-	    return svc.getHubVersion();
+	    return hub.getHubVersion();
 	} catch (IOException | BDRestException | URISyntaxException e) {
 	    throw new NotificationDaoException(e.getMessage());
 	}

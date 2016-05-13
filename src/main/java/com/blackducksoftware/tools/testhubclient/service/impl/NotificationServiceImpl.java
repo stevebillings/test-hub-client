@@ -89,8 +89,8 @@ public class NotificationServiceImpl implements NotificationService {
 	queryParameters.add(new NameValuePair("limit", String.valueOf(limit)));
 
 	try {
-	    notifResponse = dao.getFromRelativeUrl(NotificationResponse.class,
-		    urlSegments, queryParameters);
+	    notifResponse = dao.getAndCacheItemsFromRelativeUrl(
+		    NotificationResponse.class, urlSegments, queryParameters);
 	} catch (NotificationDaoException e) {
 	    throw new NotificationServiceException(e);
 	}
