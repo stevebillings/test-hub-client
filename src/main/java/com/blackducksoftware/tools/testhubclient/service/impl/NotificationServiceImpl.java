@@ -10,6 +10,7 @@ import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
+import com.blackducksoftware.tools.testhubclient.model.component.ComponentVersion;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
 import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
@@ -37,21 +38,8 @@ public class NotificationServiceImpl implements NotificationService {
     public List<NotificationItem> getNotifications(String startDate,
 	    String endDate, int limit) throws NotificationServiceException {
 
-	List<String> urlSegments = new ArrayList<>();
-	urlSegments.add("api");
-	urlSegments.add("notifications");
-
-	Set<NameValuePair> queryParameters = new HashSet<>();
-	queryParameters.add(new NameValuePair("startDate", startDate));
-	queryParameters.add(new NameValuePair("endDate", endDate));
-	queryParameters.add(new NameValuePair("limit", String.valueOf(limit)));
-	NotificationResponse notifResponse;
-	try {
-	    notifResponse = dao.getFromRelativeUrl(NotificationResponse.class,
-		    urlSegments, queryParameters);
-	} catch (NotificationDaoException e) {
-	    throw new NotificationServiceException(e);
-	}
+	NotificationResponse notifResponse = getNotificationResponse(startDate,
+		endDate, limit);
 
 	// Since we don't know the type of each item in advance, we
 	// re-parse each into a type-specific object
@@ -89,6 +77,27 @@ public class NotificationServiceImpl implements NotificationService {
 	return notificationItems;
     }
 
+    private NotificationResponse getNotificationResponse(String startDate,
+	    String endDate, int limit) throws NotificationServiceException {
+	NotificationResponse notifResponse;
+	List<String> urlSegments = new ArrayList<>();
+	urlSegments.add("api");
+	urlSegments.add("notifications");
+
+	Set<NameValuePair> queryParameters = new HashSet<>();
+	queryParameters.add(new NameValuePair("startDate", startDate));
+	queryParameters.add(new NameValuePair("endDate", endDate));
+	queryParameters.add(new NameValuePair("limit", String.valueOf(limit)));
+
+	try {
+	    notifResponse = dao.getFromRelativeUrl(NotificationResponse.class,
+		    urlSegments, queryParameters);
+	} catch (NotificationDaoException e) {
+	    throw new NotificationServiceException(e);
+	}
+	return notifResponse;
+    }
+
     @Override
     public PolicyStatus getPolicyStatusFromLink(String url)
 	    throws NotificationServiceException {
@@ -97,6 +106,29 @@ public class NotificationServiceImpl implements NotificationService {
 	} catch (NotificationDaoException e) {
 	    throw new NotificationServiceException(e);
 	}
+    }
+
+    @Override
+    public String getVersion() throws NotificationServiceException {
+	try {
+	    return dao.getVersion();
+	} catch (NotificationDaoException e) {
+	    throw new NotificationServiceException(e);
+	}
+    }
+
+    @Override
+    public ComponentVersion getComponentVersionFromLink(String url)
+	    throws NotificationServiceException {
+	ComponentVersion componentVersion;
+	try {
+	    componentVersion = dao.getFromAbsoluteUrl(ComponentVersion.class,
+		    url);
+	} catch (NotificationDaoException e) {
+	    throw new NotificationServiceException(
+		    "Error getting component version name: " + e.getMessage());
+	}
+	return componentVersion;
     }
 
 }

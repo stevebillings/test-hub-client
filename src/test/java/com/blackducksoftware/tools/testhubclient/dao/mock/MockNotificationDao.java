@@ -46,7 +46,7 @@ public class MockNotificationDao implements NotificationDao {
     }
 
     @Override
-    public String getVersion() throws Exception {
+    public String getVersion() throws NotificationDaoException {
 	return "Mock DAO version";
     }
 

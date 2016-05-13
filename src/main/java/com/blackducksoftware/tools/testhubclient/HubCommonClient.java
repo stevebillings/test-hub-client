@@ -10,7 +10,6 @@ import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.dao.hub.HubNotificationDao;
-import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
 import com.blackducksoftware.tools.testhubclient.model.component.ComponentVersion;
 import com.blackducksoftware.tools.testhubclient.model.component.VulnerableComponentItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.ComponentVersionStatus;
@@ -48,7 +47,6 @@ public class HubCommonClient {
     private final ClientLogger log;
     private final NotificationService svc;
     private final NotificationDao dao;
-    private final JsonModelParser jsonModelParser;
 
     private Map<Integer, JiraTicket> tickets = new HashMap<>();
 
@@ -60,9 +58,8 @@ public class HubCommonClient {
 	this.svc = svc;
 	this.dao = dao;
 	log = new ClientLogger();
-	String hubVersion = dao.getVersion();
+	String hubVersion = svc.getVersion();
 	log.info("Hub version: " + hubVersion);
-	jsonModelParser = new JsonModelParser();
     }
 
     public Statistics run(String startDate, String endDate, int limit)
@@ -193,19 +190,13 @@ public class HubCommonClient {
     }
 
     private String getComponentVersionNameFromLink(String componentVersionLink)
-	    throws NotificationDaoException {
+	    throws NotificationServiceException {
 	if (componentVersionLink == null) {
 	    return "<null>";
 	}
 
-	ComponentVersion componentVersion;
-	try {
-	    componentVersion = dao.getFromAbsoluteUrl(ComponentVersion.class,
-		    componentVersionLink);
-	} catch (NotificationDaoException e) {
-	    throw new NotificationDaoException(
-		    "Error getting component version name: " + e.getMessage());
-	}
+	ComponentVersion componentVersion = svc
+		.getComponentVersionFromLink(componentVersionLink);
 	return componentVersion.getVersionName();
     }
 

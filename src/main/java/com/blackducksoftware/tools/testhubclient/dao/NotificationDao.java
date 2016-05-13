@@ -20,7 +20,7 @@ public interface NotificationDao {
      * @return
      * @throws Exception
      */
-    String getVersion() throws Exception;
+    String getVersion() throws NotificationDaoException;
 
     /**
      * Get a resource from the given relative URL.
