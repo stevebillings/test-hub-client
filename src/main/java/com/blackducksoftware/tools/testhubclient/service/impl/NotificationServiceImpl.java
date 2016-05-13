@@ -8,7 +8,6 @@ import java.util.Set;
 import com.blackducksoftware.tools.testhubclient.ClientLogger;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
-import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
 import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
@@ -18,19 +17,14 @@ import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolatio
 import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
 import com.blackducksoftware.tools.testhubclient.service.NotificationService;
 import com.blackducksoftware.tools.testhubclient.service.NotificationServiceException;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 public class NotificationServiceImpl implements NotificationService {
     private final NotificationDao dao;
     private final ClientLogger log;
-    private final JsonModelParser jsonModelParser;
 
     public NotificationServiceImpl(NotificationDao dao) {
 	this.dao = dao;
 	log = new ClientLogger();
-	jsonModelParser = new JsonModelParser();
     }
 
     @Override
@@ -40,31 +34,47 @@ public class NotificationServiceImpl implements NotificationService {
 	NotificationResponse notifResponse = getNotificationResponse(startDate,
 		endDate, limit);
 
-	// Since we don't know the type of each item in advance, we
-	// re-parse each into a type-specific object
-	JsonObject jsonObject = notifResponse.getJsonObject();
+	List<NotificationItem> notificationItems = new ArrayList<>(
+		notifResponse.getItems().size());
 
-	JsonArray array = jsonObject.get("items").getAsJsonArray();
-
-	List<NotificationItem> notificationItems = new ArrayList<>(array.size());
-
-	for (JsonElement elem : array) {
-	    NotificationItem genericNotif = jsonModelParser.parse(
-		    NotificationItem.class, elem);
-
+	for (NotificationItem genericNotif : notifResponse.getItems()) {
 	    log.info("\n\n======================================================================\n"
 		    + "NotificationItem: " + genericNotif);
 	    if ("VULNERABILITY".equals(genericNotif.getType())) {
-		VulnerabilityNotificationItem vulnNotif = jsonModelParser
-			.parse(VulnerabilityNotificationItem.class, elem);
+		VulnerabilityNotificationItem vulnNotif;
+		try {
+		    vulnNotif = dao.getItemFromCache(
+			    VulnerabilityNotificationItem.class, genericNotif
+				    .getMeta().getHref());
+		} catch (NotificationDaoException e) {
+		    throw new NotificationServiceException(
+			    "Error converting notification " + genericNotif
+				    + " as a VulnerabilityNotificationItem");
+		}
 		notificationItems.add(vulnNotif);
 	    } else if ("RULE_VIOLATION".equals(genericNotif.getType())) {
-		RuleViolationNotificationItem ruleViolationNotif = jsonModelParser
-			.parse(RuleViolationNotificationItem.class, elem);
+		RuleViolationNotificationItem ruleViolationNotif;
+		try {
+		    ruleViolationNotif = dao.getItemFromCache(
+			    RuleViolationNotificationItem.class, genericNotif
+				    .getMeta().getHref());
+		} catch (NotificationDaoException e) {
+		    throw new NotificationServiceException(
+			    "Error converting notification " + genericNotif
+				    + " as a RuleViolationNotificationItem");
+		}
 		notificationItems.add(ruleViolationNotif);
 	    } else if ("POLICY_OVERRIDE".equals(genericNotif.getType())) {
-		PolicyOverrideNotificationItem policyOverrideNotif = jsonModelParser
-			.parse(PolicyOverrideNotificationItem.class, elem);
+		PolicyOverrideNotificationItem policyOverrideNotif;
+		try {
+		    policyOverrideNotif = dao.getItemFromCache(
+			    PolicyOverrideNotificationItem.class, genericNotif
+				    .getMeta().getHref());
+		} catch (NotificationDaoException e) {
+		    throw new NotificationServiceException(
+			    "Error converting notification " + genericNotif
+				    + " as a PolicyOverrideNotificationItem");
+		}
 		notificationItems.add(policyOverrideNotif);
 	    } else {
 		throw new NotificationServiceException(

@@ -1,16 +1,11 @@
 package com.blackducksoftware.tools.testhubclient.model.notification;
 
-import com.blackducksoftware.tools.testhubclient.model.ModelClass;
-import com.google.gson.annotations.SerializedName;
+import com.blackducksoftware.tools.testhubclient.model.Item;
 
-public class NotificationItem extends ModelClass {
-    // public VulnerabilityNotificationContent content;
+public class NotificationItem extends Item {
     public String contentType;
     public String type;
     public String createdAt;
-
-    @SerializedName("_meta")
-    public com.blackducksoftware.tools.testhubclient.model.notification.NotificationMeta Meta;
 
     public String getContentType() {
 	return contentType;
@@ -22,10 +17,6 @@ public class NotificationItem extends ModelClass {
 
     public String getCreatedAt() {
 	return createdAt;
-    }
-
-    public com.blackducksoftware.tools.testhubclient.model.notification.NotificationMeta getMeta() {
-	return Meta;
     }
 
     public void setContentType(String contentType) {
@@ -40,15 +31,10 @@ public class NotificationItem extends ModelClass {
 	this.createdAt = createdAt;
     }
 
-    public void setMeta(
-	    com.blackducksoftware.tools.testhubclient.model.notification.NotificationMeta meta) {
-	Meta = meta;
-    }
-
     @Override
     public String toString() {
 	return "NotificationItem [contentType=" + contentType + ", type="
-		+ type + ", createdAt=" + createdAt + ", Meta=" + Meta
+		+ type + ", createdAt=" + createdAt + ", Meta=" + getMeta()
 		+ ", getDescription()=" + getDescription() + "]";
     }
 

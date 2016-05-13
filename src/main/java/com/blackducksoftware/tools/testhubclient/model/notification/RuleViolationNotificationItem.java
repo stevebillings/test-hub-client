@@ -1,6 +1,5 @@
 package com.blackducksoftware.tools.testhubclient.model.notification;
 
-
 public class RuleViolationNotificationItem extends NotificationItem {
     public RuleViolationNotificationContent content;
 
@@ -12,7 +11,7 @@ public class RuleViolationNotificationItem extends NotificationItem {
     public String toString() {
 	return "RuleViolationNotificationItem [content=" + content
 		+ ", contentType=" + contentType + ", type=" + type
-		+ ", createdAt=" + createdAt + ", Meta=" + Meta + "]";
+		+ ", createdAt=" + createdAt + ", Meta=" + getMeta() + "]";
     }
 
 }

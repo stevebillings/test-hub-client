@@ -11,7 +11,7 @@ public class PolicyOverrideNotificationItem extends NotificationItem {
     public String toString() {
 	return "PolicyOverrideNotificationItem [content=" + content
 		+ ", contentType=" + contentType + ", type=" + type
-		+ ", createdAt=" + createdAt + ", Meta=" + Meta + "]";
+		+ ", createdAt=" + createdAt + ", Meta=" + getMeta() + "]";
     }
 
 }

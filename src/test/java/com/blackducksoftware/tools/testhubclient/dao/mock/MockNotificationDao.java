@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
+import com.blackducksoftware.tools.testhubclient.model.Item;
 import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
@@ -84,6 +85,21 @@ public class MockNotificationDao implements NotificationDao {
 	    String url) throws NotificationDaoException {
 	throw new UnsupportedOperationException(
 		"getFromAbsoluteUrl() not implemented");
+    }
+
+    @Override
+    public <T extends ModelClass> T getAndCacheItemsFromRelativeUrl(
+	    Class<T> modelClass, List<String> urlSegments,
+	    Set<NameValuePair> queryParameters) throws NotificationDaoException {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public <T extends Item> T getItemFromCache(Class<T> itemClass,
+	    String itemUrl) throws NotificationDaoException {
+	// TODO Auto-generated method stub
+	return null;
     }
 
 }
