@@ -17,7 +17,7 @@ import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverri
 import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.VulnerableComponentsResponse;
-import com.blackducksoftware.tools.testhubclient.model.policy.ApprovalStatus;
+import com.blackducksoftware.tools.testhubclient.model.policy.ApprovalStatusItem;
 import com.blackducksoftware.tools.testhubclient.model.policy.PolicyRule;
 import com.blackducksoftware.tools.testhubclient.model.policy.PolicyStatus;
 import com.blackducksoftware.tools.testhubclient.model.projectversion.ProjectVersion;
@@ -173,13 +173,13 @@ public class HubCommonClient {
 	    String componentVersion;
 	    try {
 		componentVersion = getComponentVersionNameFromLink(compStatus
-			.getComponentVersion());
+			.getComponentVersionLink());
 	    } catch (Exception e) {
 		componentVersion = "<not specified>";
 	    }
 
 	    processPolicyViolation(notificationTimeStamp, ruleViolationNotif,
-		    compStatus.getBomComponentVersionPolicyStatus(),
+		    compStatus.getBomComponentVersionPolicyStatusLink(),
 		    ruleViolationNotif.getContent().getProjectName(),
 		    ruleViolationNotif.getContent().getProjectVersionName(),
 		    compStatus.getComponentName(), componentVersion);
@@ -204,8 +204,8 @@ public class HubCommonClient {
 	    String componentName, String componentVersion) throws Exception {
 
 	try {
-	    ApprovalStatus policyStatus = svc.getLinkedResourceFromAbsoluteUrl(
-		    ApprovalStatus.class, policyStatusLink);
+	    ApprovalStatusItem policyStatus = svc.getLinkedResourceFromAbsoluteUrl(
+		    ApprovalStatusItem.class, policyStatusLink);
 	    log.info("Approval Status: " + policyStatus);
 	    if ("NOT_IN_VIOLATION".equals(policyStatus.getApprovalStatus())) {
 		log.info("Not generating a ticket");

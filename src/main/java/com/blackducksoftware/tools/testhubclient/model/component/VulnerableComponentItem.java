@@ -1,15 +1,18 @@
 package com.blackducksoftware.tools.testhubclient.model.component;
 
 import com.blackducksoftware.tools.testhubclient.model.vulnerability.VulnerabilityWithRemediation;
+import com.google.gson.annotations.SerializedName;
 
 public class VulnerableComponentItem {
-    private String componentVersion;
+    @SerializedName("componentVersion")
+    private String componentVersionLink;
+
     private String componentName;
     private String componentVersionName;
     private VulnerabilityWithRemediation vulnerabilityWithRemediation;
 
-    public String getComponentVersion() {
-	return componentVersion;
+    public String getComponentVersionLink() {
+	return componentVersionLink;
     }
 
     public String getComponentName() {
@@ -26,8 +29,8 @@ public class VulnerableComponentItem {
 
     @Override
     public String toString() {
-	return "VulnerableComponentItem [componentVersion=" + componentVersion
-		+ ", componentName=" + componentName
+	return "VulnerableComponentItem [componentVersionLink="
+		+ componentVersionLink + ", componentName=" + componentName
 		+ ", componentVersionName=" + componentVersionName
 		+ ", vulnerabilityWithRemediation="
 		+ vulnerabilityWithRemediation + "]";

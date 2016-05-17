@@ -1,28 +1,34 @@
 package com.blackducksoftware.tools.testhubclient.model.notification;
 
+import com.google.gson.annotations.SerializedName;
+
 public class ComponentVersionStatus {
     private String componentName;
-    private String componentVersion;
-    private String bomComponentVersionPolicyStatus;
+
+    @SerializedName("componentVersion")
+    private String componentVersionLink;
+
+    @SerializedName("bomComponentVersionPolicyStatus")
+    private String bomComponentVersionPolicyStatusLink;
 
     public String getComponentName() {
 	return componentName;
     }
 
-    public String getComponentVersion() {
-	return componentVersion;
+    public String getComponentVersionLink() {
+	return componentVersionLink;
     }
 
-    public String getBomComponentVersionPolicyStatus() {
-	return bomComponentVersionPolicyStatus;
+    public String getBomComponentVersionPolicyStatusLink() {
+	return bomComponentVersionPolicyStatusLink;
     }
 
     @Override
     public String toString() {
 	return "ComponentVersionStatus [componentName=" + componentName
-		+ ", componentVersion=" + componentVersion
-		+ ", bomComponentVersionPolicyStatus="
-		+ bomComponentVersionPolicyStatus + "]";
+		+ ", componentVersion=" + componentVersionLink
+		+ ", bomComponentVersionPolicyStatusLink="
+		+ bomComponentVersionPolicyStatusLink + "]";
     }
 
 }
