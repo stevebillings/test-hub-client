@@ -1,9 +1,9 @@
 package com.blackducksoftware.tools.testhubclient.model.policy;
 
-import com.blackducksoftware.tools.testhubclient.model.ItemWithLinks;
+import com.blackducksoftware.tools.testhubclient.model.Item;
 import com.blackducksoftware.tools.testhubclient.model.Link;
 
-public class ApprovalStatus extends ItemWithLinks {
+public class ApprovalStatus extends Item {
     private String approvalStatus;
 
     public String getApprovalStatus() {
