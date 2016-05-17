@@ -1,21 +1,23 @@
 package com.blackducksoftware.tools.testhubclient.model.notification;
 
+import java.util.Date;
+
 import com.blackducksoftware.tools.testhubclient.model.Item;
 
 public class NotificationItem extends Item {
     public String contentType;
-    public String type;
-    public String createdAt;
+    public NotificationType type;
+    public Date createdAt;
 
     public String getContentType() {
 	return contentType;
     }
 
-    public String getType() {
+    public NotificationType getType() {
 	return type;
     }
 
-    public String getCreatedAt() {
+    public Date getCreatedAt() {
 	return createdAt;
     }
 
@@ -23,11 +25,11 @@ public class NotificationItem extends Item {
 	this.contentType = contentType;
     }
 
-    public void setType(String type) {
+    public void setType(NotificationType type) {
 	this.type = type;
     }
 
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(Date createdAt) {
 	this.createdAt = createdAt;
     }
 

@@ -2,6 +2,7 @@ package com.blackducksoftware.tools.testhubclient;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +37,8 @@ public class HubCommonClient {
 	String password = "blackduck";
 
 	NotificationDao dao = new HubNotificationDao(
-		"http://eng-hub-valid03.dc1.lan", username, password);
+		"http://eng-hub-valid03.dc1.lan", username, password,
+		"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 	NotificationService svc = new NotificationServiceImpl(dao);
 	HubCommonClient client = new HubCommonClient(svc);
 
@@ -77,7 +79,8 @@ public class HubCommonClient {
 	List<NotificationItem> notificationItems = svc.getNotifications(
 		startDate, endDate, limit);
 	for (NotificationItem notificationItem : notificationItems) {
-	    String notificationTimeStamp = notificationItem.getCreatedAt();
+
+	    Date notificationTimeStamp = notificationItem.getCreatedAt();
 	    log.info("\n\n======================================================================\n"
 		    + "NotificationItem: " + notificationItem);
 	    if (notificationItem instanceof VulnerabilityNotificationItem) {
@@ -97,8 +100,7 @@ public class HubCommonClient {
 	return notificationItems.size();
     }
 
-    private void processPolicyOverrideNotification(
-	    String notificationTimeStamp,
+    private void processPolicyOverrideNotification(Date notificationTimeStamp,
 	    PolicyOverrideNotificationItem policyOverrideNotif)
 	    throws Exception {
 	PolicyStatus compPolicyStatus = getCompPolicyStatusFromLink(policyOverrideNotif
@@ -164,7 +166,7 @@ public class HubCommonClient {
 	return policyStatus;
     }
 
-    private void processRuleViolationNotification(String notificationTimeStamp,
+    private void processRuleViolationNotification(Date notificationTimeStamp,
 	    RuleViolationNotificationItem ruleViolationNotif) throws Exception {
 	List<ComponentVersionStatus> compStatuses = ruleViolationNotif
 		.getContent().getComponentVersionStatuses();
@@ -198,14 +200,15 @@ public class HubCommonClient {
 	return componentVersion.getVersionName();
     }
 
-    private void processPolicyViolation(String notificationTimeStamp,
+    private void processPolicyViolation(Date notificationTimeStamp,
 	    RuleViolationNotificationItem ruleViolationNotificationItem,
 	    String policyStatusLink, String projectName, String projectVersion,
 	    String componentName, String componentVersion) throws Exception {
 
 	try {
-	    ApprovalStatusItem policyStatus = svc.getLinkedResourceFromAbsoluteUrl(
-		    ApprovalStatusItem.class, policyStatusLink);
+	    ApprovalStatusItem policyStatus = svc
+		    .getLinkedResourceFromAbsoluteUrl(ApprovalStatusItem.class,
+			    policyStatusLink);
 	    log.info("Approval Status: " + policyStatus);
 	    if ("NOT_IN_VIOLATION".equals(policyStatus.getApprovalStatus())) {
 		log.info("Not generating a ticket");
@@ -221,7 +224,7 @@ public class HubCommonClient {
 	}
     }
 
-    private void processPolicy(String notificationTimeStamp,
+    private void processPolicy(Date notificationTimeStamp,
 	    RuleViolationNotificationItem ruleViolationNotificationItem,
 	    String policyLink, String projectName, String projectVersion,
 	    String componentName, String componentVersion) throws IOException,
@@ -253,7 +256,7 @@ public class HubCommonClient {
 	}
     }
 
-    private void processVulnerabilityNotification(String notificationTimeStamp,
+    private void processVulnerabilityNotification(Date notificationTimeStamp,
 	    VulnerabilityNotificationItem vulnNotif) throws IOException,
 	    BDRestException, URISyntaxException, NotificationServiceException {
 	log.debug("processVulnerabilityNotification()");
@@ -273,7 +276,7 @@ public class HubCommonClient {
 	}
     }
 
-    private void processProjectVersionLink(String notificationTimeStamp,
+    private void processProjectVersionLink(Date notificationTimeStamp,
 	    String projectVersionLink, String projectName,
 	    String targetComponentName, String targetComponentVersion)
 	    throws URISyntaxException, IOException,
@@ -291,7 +294,7 @@ public class HubCommonClient {
 		targetComponentVersion);
     }
 
-    private void processVulnerableComponentsLink(String notificationTimeStamp,
+    private void processVulnerableComponentsLink(Date notificationTimeStamp,
 	    String vulnerableComponentsLink, String projectName,
 	    String projectVersionName, String targetComponentName,
 	    String targetComponentVersion) throws URISyntaxException,

@@ -17,6 +17,7 @@ import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
+import com.blackducksoftware.tools.testhubclient.model.notification.NotificationType;
 import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
@@ -26,13 +27,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class HubNotificationDaoTest {
+    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
     private static NotificationDao hub;
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
 
 	hub = new HubNotificationDao("http://eng-hub-valid03.dc1.lan",
-		"sysadmin", "blackduck");
+		"sysadmin", "blackduck", DATE_FORMAT);
 	System.out.println("Hub version: " + hub.getVersion());
     }
 
@@ -49,8 +51,8 @@ public class HubNotificationDaoTest {
 			"http://eng-hub-valid03.dc1.lan/api/notifications/51b42223-c093-4305-b383-ba73a02fcd30");
 	System.out.println(notifItem);
 	assertEquals("application/json", notifItem.getContentType());
-	assertEquals("RULE_VIOLATION", notifItem.getType());
-	assertEquals("2016-04-17T15:20:27.990Z", notifItem.getCreatedAt());
+	assertEquals(NotificationType.RULE_VIOLATION, notifItem.getType());
+	assertEquals(1460920827990L, notifItem.getCreatedAt().getTime());
 	assertEquals("GET", notifItem.getMeta().getAllow().get(0));
 	assertEquals(
 		"http://eng-hub-valid03.dc1.lan/api/notifications/51b42223-c093-4305-b383-ba73a02fcd30",
@@ -120,21 +122,23 @@ public class HubNotificationDaoTest {
 			urlSegments, queryParameters);
 
 	for (NotificationItem genericNotif : notifResponse.getItems()) {
-	    if ("VULNERABILITY".equals(genericNotif.getType())) {
+	    if (NotificationType.VULNERABILITY.equals(genericNotif.getType())) {
 		VulnerabilityNotificationItem vulnerabilityNotif = hub
 			.getItemFromCache(VulnerabilityNotificationItem.class,
 				genericNotif.getMeta().getHref());
 		System.out.println(vulnerabilityNotif);
 		assertTrue(vulnerabilityNotif.getContent()
 			.getNewVulnerabilityCount() > 0);
-	    } else if ("RULE_VIOLATION".equals(genericNotif.getType())) {
+	    } else if (NotificationType.RULE_VIOLATION.equals(genericNotif
+		    .getType())) {
 		RuleViolationNotificationItem ruleViolationNotif = hub
 			.getItemFromCache(RuleViolationNotificationItem.class,
 				genericNotif.getMeta().getHref());
 		System.out.println(ruleViolationNotif);
 		assertTrue(ruleViolationNotif.getContent()
 			.getComponentVersionStatuses().size() > 0);
-	    } else if ("POLICY_OVERRIDE".equals(genericNotif.getType())) {
+	    } else if (NotificationType.POLICY_OVERRIDE.equals(genericNotif
+		    .getType())) {
 		PolicyOverrideNotificationItem policyOverrideNotif = hub
 			.getItemFromCache(PolicyOverrideNotificationItem.class,
 				genericNotif.getMeta().getHref());
@@ -178,14 +182,14 @@ public class HubNotificationDaoTest {
 	JsonObject json = parser.parse(response).getAsJsonObject();
 	JsonArray array = json.get("items").getAsJsonArray();
 
-	JsonModelParser jsonModelParser = new JsonModelParser();
+	JsonModelParser jsonModelParser = new JsonModelParser(DATE_FORMAT);
 	NotificationItem notifItem = jsonModelParser.parse(
 		NotificationItem.class, array.get(0));
 
 	System.out.println(notifItem);
 	assertEquals("application/json", notifItem.getContentType());
-	assertEquals("RULE_VIOLATION", notifItem.getType());
-	assertEquals("2016-05-01T11:00:09.830Z", notifItem.getCreatedAt());
+	assertEquals(NotificationType.RULE_VIOLATION, notifItem.getType());
+	assertEquals(1462114809830L, notifItem.getCreatedAt().getTime());
 	assertEquals("GET", notifItem.getMeta().getAllow().get(0));
 	assertEquals(
 		"http://eng-hub-valid03.dc1.lan/api/notifications/e5071453-cbae-457f-b84c-9d60c79d0409",

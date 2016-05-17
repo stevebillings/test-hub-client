@@ -12,6 +12,7 @@ import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
+import com.blackducksoftware.tools.testhubclient.model.notification.NotificationType;
 import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
@@ -63,7 +64,7 @@ public class MockNotificationDao implements NotificationDao {
 	    NotificationResponse notifResponse = new NotificationResponse();
 	    List<NotificationItem> notificationItems = new ArrayList<>();
 	    NotificationItem notif = new NotificationItem();
-	    notif.setType("VULNERABILITY");
+	    notif.setType(NotificationType.VULNERABILITY);
 	    Meta meta = new Meta();
 	    meta.setHref(TEST_ITEM_URL);
 	    notif.setMeta(meta);
@@ -73,7 +74,7 @@ public class MockNotificationDao implements NotificationDao {
 	    return (T) (notifResponse);
 	} else if (modelClass == NotificationItem.class) {
 	    NotificationItem notif = new NotificationItem();
-	    notif.setType("VULNERABILITY");
+	    notif.setType(NotificationType.VULNERABILITY);
 	    return (T) (notif);
 	} else {
 	    throw new UnsupportedOperationException(
@@ -105,21 +106,21 @@ public class MockNotificationDao implements NotificationDao {
 	    VulnerabilityNotificationItem item = new VulnerabilityNotificationItem();
 	    item.setContentType("testItemCreatedAt");
 	    item.setDescription("mock item");
-	    item.setType("VULNERABILITY");
+	    item.setType(NotificationType.VULNERABILITY);
 	    return (T) (item);
 	} else if ((itemClass == RuleViolationNotificationItem.class)
 		&& (TEST_ITEM_URL.equals(itemUrl))) {
 	    RuleViolationNotificationItem item = new RuleViolationNotificationItem();
 	    item.setContentType("testItemCreatedAt");
 	    item.setDescription("mock item");
-	    item.setType("RULE_VIOLATION");
+	    item.setType(NotificationType.RULE_VIOLATION);
 	    return (T) (item);
 	} else if ((itemClass == PolicyOverrideNotificationItem.class)
 		&& (TEST_ITEM_URL.equals(itemUrl))) {
 	    PolicyOverrideNotificationItem item = new PolicyOverrideNotificationItem();
 	    item.setContentType("testItemCreatedAt");
 	    item.setDescription("mock item");
-	    item.setType("RULE_VIOLATION");
+	    item.setType(NotificationType.RULE_VIOLATION);
 	    return (T) (item);
 	} else {
 	    throw new NotificationDaoException("Item with URL " + itemUrl

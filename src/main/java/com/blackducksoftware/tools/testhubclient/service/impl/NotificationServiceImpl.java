@@ -12,6 +12,7 @@ import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
+import com.blackducksoftware.tools.testhubclient.model.notification.NotificationType;
 import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
@@ -40,7 +41,7 @@ public class NotificationServiceImpl implements NotificationService {
 	for (NotificationItem genericNotif : notifResponse.getItems()) {
 	    log.info("\n\n======================================================================\n"
 		    + "NotificationItem: " + genericNotif);
-	    if ("VULNERABILITY".equals(genericNotif.getType())) {
+	    if (NotificationType.VULNERABILITY.equals(genericNotif.getType())) {
 		VulnerabilityNotificationItem vulnNotif;
 		try {
 		    vulnNotif = dao.getItemFromCache(
@@ -52,7 +53,8 @@ public class NotificationServiceImpl implements NotificationService {
 				    + " as a VulnerabilityNotificationItem");
 		}
 		notificationItems.add(vulnNotif);
-	    } else if ("RULE_VIOLATION".equals(genericNotif.getType())) {
+	    } else if (NotificationType.RULE_VIOLATION.equals(genericNotif
+		    .getType())) {
 		RuleViolationNotificationItem ruleViolationNotif;
 		try {
 		    ruleViolationNotif = dao.getItemFromCache(
@@ -64,7 +66,8 @@ public class NotificationServiceImpl implements NotificationService {
 				    + " as a RuleViolationNotificationItem");
 		}
 		notificationItems.add(ruleViolationNotif);
-	    } else if ("POLICY_OVERRIDE".equals(genericNotif.getType())) {
+	    } else if (NotificationType.POLICY_OVERRIDE.equals(genericNotif
+		    .getType())) {
 		PolicyOverrideNotificationItem policyOverrideNotif;
 		try {
 		    policyOverrideNotif = dao.getItemFromCache(

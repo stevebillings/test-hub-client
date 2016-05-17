@@ -41,17 +41,20 @@ import com.google.gson.JsonParser;
  *
  */
 public class HubNotificationDao implements NotificationDao {
+    private String dateFormat;
     private ClientLogger log = new ClientLogger();
     private HubIntRestService hub;
     private Map<String, JsonElement> itemJsonCache; // URL -> Json Element cache
     private final JsonModelParser jsonModelParser;
 
-    public HubNotificationDao(String hubUrl, String username, String password)
-	    throws HubIntegrationException, URISyntaxException, BDRestException {
+    public HubNotificationDao(String hubUrl, String username, String password,
+	    String dateFormat) throws HubIntegrationException,
+	    URISyntaxException, BDRestException {
 	hub = new HubIntRestService(hubUrl);
 	hub.setCookies(username, password);
 	itemJsonCache = new HashMap<>();
-	jsonModelParser = new JsonModelParser();
+	jsonModelParser = new JsonModelParser(dateFormat);
+	this.dateFormat = dateFormat;
     }
 
     @Override
@@ -67,7 +70,7 @@ public class HubNotificationDao implements NotificationDao {
 	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
 	    final String response = readResponseAsString(resource.getResponse());
 
-	    Gson gson = new GsonBuilder().create();
+	    Gson gson = new GsonBuilder().setDateFormat(dateFormat).create();
 	    JsonParser parser = new JsonParser();
 	    JsonObject json = parser.parse(response).getAsJsonObject();
 	    T modelObject = gson.fromJson(json, modelClass);
@@ -96,7 +99,7 @@ public class HubNotificationDao implements NotificationDao {
 	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
 	    final String response = readResponseAsString(resource.getResponse());
 
-	    Gson gson = new GsonBuilder().create();
+	    Gson gson = new GsonBuilder().setDateFormat(dateFormat).create();
 	    JsonParser parser = new JsonParser();
 	    JsonObject json = parser.parse(response).getAsJsonObject();
 	    T modelObject = gson.fromJson(json, modelClass);
@@ -172,7 +175,7 @@ public class HubNotificationDao implements NotificationDao {
 	    log.debug("SUCCESS getting resource from Hub");
 	    final String response = readResponseAsString(resource.getResponse());
 
-	    Gson gson = new GsonBuilder().create();
+	    Gson gson = new GsonBuilder().setDateFormat(dateFormat).create();
 	    JsonParser parser = new JsonParser();
 	    JsonObject json = parser.parse(response).getAsJsonObject();
 

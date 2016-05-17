@@ -9,8 +9,8 @@ import com.google.gson.JsonElement;
 public class JsonModelParser {
     private final Gson gson;
 
-    public JsonModelParser() {
-	gson = new GsonBuilder().create();
+    public JsonModelParser(String dateFormat) {
+	gson = new GsonBuilder().setDateFormat(dateFormat).create();
     }
 
     /**

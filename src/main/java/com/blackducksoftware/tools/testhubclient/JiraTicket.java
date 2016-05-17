@@ -1,7 +1,9 @@
 package com.blackducksoftware.tools.testhubclient;
 
+import java.util.Date;
+
 public class JiraTicket {
-    private final String dateCreated;
+    private final Date dateCreated;
     private final JiraTicketType ticketType;
     private final String projectName;
     private final String projectVersionName;
@@ -11,7 +13,7 @@ public class JiraTicket {
     private final String ruleName;
     private final ActionRequired actionRequired;
 
-    public JiraTicket(String dateCreated, JiraTicketType ticketType,
+    public JiraTicket(Date dateCreated, JiraTicketType ticketType,
 	    String projectName, String projectVersionName,
 	    String componentName, String componentVersionName,
 	    String vulnerabilityName, String ruleName,
@@ -28,7 +30,7 @@ public class JiraTicket {
 	this.actionRequired = actionRequired;
     }
 
-    public String getDateCreated() {
+    public Date getDateCreated() {
 	return dateCreated;
     }
 
