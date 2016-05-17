@@ -4,10 +4,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.blackducksoftware.tools.testhubclient.model.Item;
-import com.blackducksoftware.tools.testhubclient.model.Meta;
 import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
-import com.google.gson.JsonDeserializer;
 
 /**
  * Gets Notifications and data they point to.
@@ -36,8 +34,7 @@ public interface NotificationDao {
      * @throws NotificationDaoException
      */
     <T extends ModelClass> T getFromRelativeUrl(Class<T> modelClass,
-	    List<String> urlSegments, Set<NameValuePair> queryParameters,
-	    JsonDeserializer<Meta> metaDeserializer)
+	    List<String> urlSegments, Set<NameValuePair> queryParameters)
 	    throws NotificationDaoException;
 
     /**
@@ -60,9 +57,7 @@ public interface NotificationDao {
      */
     <T extends ModelClass> T getAndCacheItemsFromRelativeUrl(
 	    Class<T> modelClass, List<String> urlSegments,
-	    Set<NameValuePair> queryParameters,
-	    JsonDeserializer<Meta> metaDeserializer)
-	    throws NotificationDaoException;
+	    Set<NameValuePair> queryParameters) throws NotificationDaoException;
 
     /**
      * Reload an item from the item cache as the given type.
@@ -87,8 +82,7 @@ public interface NotificationDao {
      * @return
      * @throws NotificationDaoException
      */
-    <T extends ModelClass> T getFromAbsoluteUrl(Class<T> modelClass,
-	    String url, JsonDeserializer<Meta> metaDeserializer)
+    <T extends ModelClass> T getFromAbsoluteUrl(Class<T> modelClass, String url)
 	    throws NotificationDaoException;
 
 }

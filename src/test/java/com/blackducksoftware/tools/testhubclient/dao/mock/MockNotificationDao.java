@@ -8,7 +8,6 @@ import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.model.Item;
 import com.blackducksoftware.tools.testhubclient.model.Meta;
-import com.blackducksoftware.tools.testhubclient.model.MetaWithoutLinks;
 import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
@@ -16,7 +15,6 @@ import com.blackducksoftware.tools.testhubclient.model.notification.Notification
 import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
-import com.google.gson.JsonDeserializer;
 
 public class MockNotificationDao implements NotificationDao {
 
@@ -58,8 +56,7 @@ public class MockNotificationDao implements NotificationDao {
 
     @Override
     public <T extends ModelClass> T getFromRelativeUrl(Class<T> modelClass,
-	    List<String> urlSegments, Set<NameValuePair> queryParameters,
-	    JsonDeserializer<Meta> metaDeserializer)
+	    List<String> urlSegments, Set<NameValuePair> queryParameters)
 	    throws NotificationDaoException {
 
 	if (modelClass == NotificationResponse.class) {
@@ -67,7 +64,7 @@ public class MockNotificationDao implements NotificationDao {
 	    List<NotificationItem> notificationItems = new ArrayList<>();
 	    NotificationItem notif = new NotificationItem();
 	    notif.setType("VULNERABILITY");
-	    MetaWithoutLinks meta = new MetaWithoutLinks();
+	    Meta meta = new Meta();
 	    meta.setHref(TEST_ITEM_URL);
 	    notif.setMeta(meta);
 	    notificationItems.add(notif);
@@ -87,8 +84,7 @@ public class MockNotificationDao implements NotificationDao {
 
     @Override
     public <T extends ModelClass> T getFromAbsoluteUrl(Class<T> modelClass,
-	    String url, JsonDeserializer<Meta> metaDeserializer)
-	    throws NotificationDaoException {
+	    String url) throws NotificationDaoException {
 	throw new UnsupportedOperationException(
 		"getFromAbsoluteUrl() not implemented");
     }
@@ -96,12 +92,9 @@ public class MockNotificationDao implements NotificationDao {
     @Override
     public <T extends ModelClass> T getAndCacheItemsFromRelativeUrl(
 	    Class<T> modelClass, List<String> urlSegments,
-	    Set<NameValuePair> queryParameters,
-	    JsonDeserializer<Meta> metaDeserializer)
-	    throws NotificationDaoException {
+	    Set<NameValuePair> queryParameters) throws NotificationDaoException {
 
-	return getFromRelativeUrl(modelClass, urlSegments, queryParameters,
-		metaDeserializer);
+	return getFromRelativeUrl(modelClass, urlSegments, queryParameters);
     }
 
     @Override

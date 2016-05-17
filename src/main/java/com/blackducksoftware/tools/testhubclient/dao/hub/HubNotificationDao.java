@@ -24,15 +24,12 @@ import com.blackducksoftware.tools.testhubclient.ClientLogger;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
-import com.blackducksoftware.tools.testhubclient.json.MetaWithoutLinksDeserializer;
 import com.blackducksoftware.tools.testhubclient.model.Item;
-import com.blackducksoftware.tools.testhubclient.model.Meta;
 import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -47,21 +44,19 @@ public class HubNotificationDao implements NotificationDao {
     private ClientLogger log = new ClientLogger();
     private HubIntRestService hub;
     private Map<String, JsonElement> itemJsonCache; // URL -> Json Element cache
-    private final JsonModelParser jsonModelParserForMetaWithoutLinks;
+    private final JsonModelParser jsonModelParser;
 
     public HubNotificationDao(String hubUrl, String username, String password)
 	    throws HubIntegrationException, URISyntaxException, BDRestException {
 	hub = new HubIntRestService(hubUrl);
 	hub.setCookies(username, password);
 	itemJsonCache = new HashMap<>();
-	jsonModelParserForMetaWithoutLinks = new JsonModelParser(
-		new MetaWithoutLinksDeserializer<Meta>());
+	jsonModelParser = new JsonModelParser();
     }
 
     @Override
     public <T extends ModelClass> T getFromRelativeUrl(Class<T> modelClass,
-	    List<String> urlSegments, Set<NameValuePair> queryParameters,
-	    JsonDeserializer<Meta> metaDeserializer)
+	    List<String> urlSegments, Set<NameValuePair> queryParameters)
 	    throws NotificationDaoException {
 
 	final ClientResource resource = createClientResourceForGet(urlSegments,
@@ -72,11 +67,7 @@ public class HubNotificationDao implements NotificationDao {
 	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
 	    final String response = readResponseAsString(resource.getResponse());
 
-	    GsonBuilder gsonBuilder = new GsonBuilder();
-	    if (metaDeserializer != null) {
-		gsonBuilder.registerTypeAdapter(Meta.class, metaDeserializer);
-	    }
-	    Gson gson = gsonBuilder.create();
+	    Gson gson = new GsonBuilder().create();
 	    JsonParser parser = new JsonParser();
 	    JsonObject json = parser.parse(response).getAsJsonObject();
 	    T modelObject = gson.fromJson(json, modelClass);
@@ -95,9 +86,7 @@ public class HubNotificationDao implements NotificationDao {
     @Override
     public <T extends ModelClass> T getAndCacheItemsFromRelativeUrl(
 	    Class<T> modelClass, List<String> urlSegments,
-	    Set<NameValuePair> queryParameters,
-	    JsonDeserializer<Meta> metaDeserializer)
-	    throws NotificationDaoException {
+	    Set<NameValuePair> queryParameters) throws NotificationDaoException {
 
 	final ClientResource resource = createClientResourceForGet(urlSegments,
 		queryParameters);
@@ -107,11 +96,7 @@ public class HubNotificationDao implements NotificationDao {
 	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
 	    final String response = readResponseAsString(resource.getResponse());
 
-	    GsonBuilder gsonBuilder = new GsonBuilder();
-	    if (metaDeserializer != null) {
-		gsonBuilder.registerTypeAdapter(Meta.class, metaDeserializer);
-	    }
-	    Gson gson = gsonBuilder.create();
+	    Gson gson = new GsonBuilder().create();
 	    JsonParser parser = new JsonParser();
 	    JsonObject json = parser.parse(response).getAsJsonObject();
 	    T modelObject = gson.fromJson(json, modelClass);
@@ -120,8 +105,7 @@ public class HubNotificationDao implements NotificationDao {
 
 	    JsonArray array = json.get("items").getAsJsonArray();
 	    for (JsonElement elem : array) {
-		Item genericItem = jsonModelParserForMetaWithoutLinks.parse(
-			Item.class, elem);
+		Item genericItem = jsonModelParser.parse(Item.class, elem);
 		String itemUrl = genericItem.getMeta().getHref();
 		log.info("Caching: Key: " + itemUrl + "; Value: "
 			+ elem.toString());
@@ -146,8 +130,7 @@ public class HubNotificationDao implements NotificationDao {
 			    + itemUrl
 			    + " is not in cache. Make sure it was fetched via getAndCacheItemsFromRelativeUrl(...)");
 	}
-	T item = jsonModelParserForMetaWithoutLinks.parse(itemClass,
-		itemJsonCache.get(itemUrl));
+	T item = jsonModelParser.parse(itemClass, itemJsonCache.get(itemUrl));
 	return item;
 
     }
@@ -174,8 +157,7 @@ public class HubNotificationDao implements NotificationDao {
     }
 
     public <T extends ModelClass> T getFromAbsoluteUrl(Class<T> modelClass,
-	    String url, JsonDeserializer<Meta> metaDeserializer)
-	    throws NotificationDaoException {
+	    String url) throws NotificationDaoException {
 
 	if (url == null) {
 	    return null;
@@ -190,11 +172,7 @@ public class HubNotificationDao implements NotificationDao {
 	    log.debug("SUCCESS getting resource from Hub");
 	    final String response = readResponseAsString(resource.getResponse());
 
-	    GsonBuilder gsonBuilder = new GsonBuilder();
-	    if (metaDeserializer != null) {
-		gsonBuilder.registerTypeAdapter(Meta.class, metaDeserializer);
-	    }
-	    Gson gson = gsonBuilder.create();
+	    Gson gson = new GsonBuilder().create();
 	    JsonParser parser = new JsonParser();
 	    JsonObject json = parser.parse(response).getAsJsonObject();
 

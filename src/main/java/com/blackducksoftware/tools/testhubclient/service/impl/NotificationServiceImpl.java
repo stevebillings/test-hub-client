@@ -8,9 +8,6 @@ import java.util.Set;
 import com.blackducksoftware.tools.testhubclient.ClientLogger;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
-import com.blackducksoftware.tools.testhubclient.json.MetaWithLinksDeserializer;
-import com.blackducksoftware.tools.testhubclient.json.MetaWithoutLinksDeserializer;
-import com.blackducksoftware.tools.testhubclient.model.Meta;
 import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
@@ -103,8 +100,7 @@ public class NotificationServiceImpl implements NotificationService {
 
 	try {
 	    notifResponse = dao.getAndCacheItemsFromRelativeUrl(
-		    NotificationResponse.class, urlSegments, queryParameters,
-		    new MetaWithoutLinksDeserializer<Meta>());
+		    NotificationResponse.class, urlSegments, queryParameters);
 	} catch (NotificationDaoException e) {
 	    throw new NotificationServiceException(e);
 	}
@@ -128,8 +124,7 @@ public class NotificationServiceImpl implements NotificationService {
 	    throw new NotificationServiceException("URL provided is null");
 	}
 	try {
-	    return dao.getFromAbsoluteUrl(modelClass, url,
-		    new MetaWithoutLinksDeserializer<Meta>());
+	    return dao.getFromAbsoluteUrl(modelClass, url);
 	} catch (NotificationDaoException e) {
 	    throw new NotificationServiceException(e);
 	}
@@ -143,8 +138,7 @@ public class NotificationServiceImpl implements NotificationService {
 	    throw new NotificationServiceException("URL provided is null");
 	}
 	try {
-	    return dao.getFromAbsoluteUrl(modelClass, url,
-		    new MetaWithLinksDeserializer<Meta>());
+	    return dao.getFromAbsoluteUrl(modelClass, url);
 	} catch (NotificationDaoException e) {
 	    throw new NotificationServiceException(e);
 	}

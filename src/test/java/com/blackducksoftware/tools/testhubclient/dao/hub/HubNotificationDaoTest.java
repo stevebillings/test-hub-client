@@ -14,9 +14,6 @@ import org.junit.Test;
 
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
-import com.blackducksoftware.tools.testhubclient.json.MetaWithLinksDeserializer;
-import com.blackducksoftware.tools.testhubclient.json.MetaWithoutLinksDeserializer;
-import com.blackducksoftware.tools.testhubclient.model.Meta;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
@@ -49,8 +46,7 @@ public class HubNotificationDaoTest {
 	NotificationItem notifItem = hub
 		.getFromAbsoluteUrl(
 			NotificationItem.class,
-			"http://eng-hub-valid03.dc1.lan/api/notifications/51b42223-c093-4305-b383-ba73a02fcd30",
-			new MetaWithoutLinksDeserializer<Meta>());
+			"http://eng-hub-valid03.dc1.lan/api/notifications/51b42223-c093-4305-b383-ba73a02fcd30");
 	System.out.println(notifItem);
 	assertEquals("application/json", notifItem.getContentType());
 	assertEquals("RULE_VIOLATION", notifItem.getType());
@@ -70,8 +66,7 @@ public class HubNotificationDaoTest {
 	ProjectVersionItem projectVersionItem = hub
 		.getFromAbsoluteUrl(
 			ProjectVersionItem.class,
-			"http://eng-hub-valid03.dc1.lan/api/projects/fa359df3-3319-4f6d-a00b-fe5ae5e8c15e/versions/dc377e25-4d16-4e58-91f0-8a90f4d23aa1",
-			new MetaWithLinksDeserializer<Meta>());
+			"http://eng-hub-valid03.dc1.lan/api/projects/fa359df3-3319-4f6d-a00b-fe5ae5e8c15e/versions/dc377e25-4d16-4e58-91f0-8a90f4d23aa1");
 	System.out.println(projectVersionItem);
 
 	assertEquals("GET", projectVersionItem.getMeta().getAllow().get(0));
@@ -101,8 +96,7 @@ public class HubNotificationDaoTest {
 		"2016-05-02T00:00:00.000Z"));
 	queryParameters.add(new NameValuePair("limit", "1"));
 	NotificationResponse notifResponse = hub.getFromRelativeUrl(
-		NotificationResponse.class, urlSegments, queryParameters,
-		new MetaWithoutLinksDeserializer<Meta>());
+		NotificationResponse.class, urlSegments, queryParameters);
 	List<NotificationItem> notifs = notifResponse.getItems();
 	for (NotificationItem notif : notifs) {
 	    System.out.println(notif);
@@ -123,8 +117,7 @@ public class HubNotificationDaoTest {
 	queryParameters.add(new NameValuePair("limit", "100"));
 	NotificationResponse notifResponse = hub
 		.getAndCacheItemsFromRelativeUrl(NotificationResponse.class,
-			urlSegments, queryParameters,
-			new MetaWithoutLinksDeserializer<Meta>());
+			urlSegments, queryParameters);
 
 	for (NotificationItem genericNotif : notifResponse.getItems()) {
 	    if ("VULNERABILITY".equals(genericNotif.getType())) {
@@ -185,8 +178,7 @@ public class HubNotificationDaoTest {
 	JsonObject json = parser.parse(response).getAsJsonObject();
 	JsonArray array = json.get("items").getAsJsonArray();
 
-	JsonModelParser jsonModelParser = new JsonModelParser(
-		new MetaWithoutLinksDeserializer<Meta>());
+	JsonModelParser jsonModelParser = new JsonModelParser();
 	NotificationItem notifItem = jsonModelParser.parse(
 		NotificationItem.class, array.get(0));
 
