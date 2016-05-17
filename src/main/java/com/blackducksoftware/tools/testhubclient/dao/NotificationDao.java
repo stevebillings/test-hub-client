@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Set;
 
 import com.blackducksoftware.tools.testhubclient.model.Item;
+import com.blackducksoftware.tools.testhubclient.model.Meta;
 import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
+import com.google.gson.JsonDeserializer;
 
 /**
  * Gets Notifications and data they point to.
@@ -29,11 +31,13 @@ public interface NotificationDao {
      * @param modelClass
      * @param urlSegments
      * @param queryParameters
+     * @param metaDeserializer
      * @return
      * @throws NotificationDaoException
      */
     <T extends ModelClass> T getFromRelativeUrl(Class<T> modelClass,
-	    List<String> urlSegments, Set<NameValuePair> queryParameters)
+	    List<String> urlSegments, Set<NameValuePair> queryParameters,
+	    JsonDeserializer<Meta> metaDeserializer)
 	    throws NotificationDaoException;
 
     /**
@@ -50,12 +54,15 @@ public interface NotificationDao {
      * @param modelClass
      * @param urlSegments
      * @param queryParameters
+     * @param metaDeserializer
      * @return
      * @throws NotificationDaoException
      */
     <T extends ModelClass> T getAndCacheItemsFromRelativeUrl(
 	    Class<T> modelClass, List<String> urlSegments,
-	    Set<NameValuePair> queryParameters) throws NotificationDaoException;
+	    Set<NameValuePair> queryParameters,
+	    JsonDeserializer<Meta> metaDeserializer)
+	    throws NotificationDaoException;
 
     /**
      * Reload an item from the item cache as the given type.
@@ -71,14 +78,17 @@ public interface NotificationDao {
 	    throws NotificationDaoException;
 
     /**
-     * Get a resource from the given absolute URL.
+     * Get a resource from the given absolutely URL. Use the given deserializer
+     * for the _meta element.
      * 
      * @param modelClass
      * @param url
+     * @param metaDeserializer
      * @return
      * @throws NotificationDaoException
      */
-    <T extends ModelClass> T getFromAbsoluteUrl(Class<T> modelClass, String url)
+    <T extends ModelClass> T getFromAbsoluteUrl(Class<T> modelClass,
+	    String url, JsonDeserializer<Meta> metaDeserializer)
 	    throws NotificationDaoException;
 
 }

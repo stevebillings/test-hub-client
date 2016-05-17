@@ -8,6 +8,9 @@ import java.util.Set;
 import com.blackducksoftware.tools.testhubclient.ClientLogger;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
+import com.blackducksoftware.tools.testhubclient.json.MetaWithLinksDeserializer;
+import com.blackducksoftware.tools.testhubclient.json.MetaWithoutLinksDeserializer;
+import com.blackducksoftware.tools.testhubclient.model.Meta;
 import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
@@ -100,7 +103,8 @@ public class NotificationServiceImpl implements NotificationService {
 
 	try {
 	    notifResponse = dao.getAndCacheItemsFromRelativeUrl(
-		    NotificationResponse.class, urlSegments, queryParameters);
+		    NotificationResponse.class, urlSegments, queryParameters,
+		    new MetaWithoutLinksDeserializer<Meta>());
 	} catch (NotificationDaoException e) {
 	    throw new NotificationServiceException(e);
 	}
@@ -117,16 +121,32 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public <T extends ModelClass> T getFromAbsoluteUrl(Class<T> modelClass,
-	    String url) throws NotificationServiceException {
+    public <T extends ModelClass> T getResourceFromAbsoluteUrl(
+	    Class<T> modelClass, String url)
+	    throws NotificationServiceException {
 	if (url == null) {
 	    throw new NotificationServiceException("URL provided is null");
 	}
 	try {
-	    return dao.getFromAbsoluteUrl(modelClass, url);
+	    return dao.getFromAbsoluteUrl(modelClass, url,
+		    new MetaWithoutLinksDeserializer<Meta>());
 	} catch (NotificationDaoException e) {
 	    throw new NotificationServiceException(e);
 	}
     }
 
+    @Override
+    public <T extends ModelClass> T getLinkedResourceFromAbsoluteUrl(
+	    Class<T> modelClass, String url)
+	    throws NotificationServiceException {
+	if (url == null) {
+	    throw new NotificationServiceException("URL provided is null");
+	}
+	try {
+	    return dao.getFromAbsoluteUrl(modelClass, url,
+		    new MetaWithLinksDeserializer<Meta>());
+	} catch (NotificationDaoException e) {
+	    throw new NotificationServiceException(e);
+	}
+    }
 }

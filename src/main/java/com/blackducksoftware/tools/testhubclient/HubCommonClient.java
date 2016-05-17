@@ -152,7 +152,7 @@ public class HubCommonClient {
 
 	PolicyStatus policyStatus = null;
 	try {
-	    policyStatus = svc.getFromAbsoluteUrl(PolicyStatus.class,
+	    policyStatus = svc.getResourceFromAbsoluteUrl(PolicyStatus.class,
 		    compPolicyStatusLink);
 	} catch (NotificationServiceException e) {
 	    log.warn("Error getting policy status from " + compPolicyStatusLink
@@ -192,8 +192,9 @@ public class HubCommonClient {
 	    return "<null>";
 	}
 
-	ComponentVersion componentVersion = svc.getFromAbsoluteUrl(
-		ComponentVersion.class, componentVersionLink);
+	ComponentVersion componentVersion = svc
+		.getLinkedResourceFromAbsoluteUrl(ComponentVersion.class,
+			componentVersionLink);
 	return componentVersion.getVersionName();
     }
 
@@ -203,7 +204,7 @@ public class HubCommonClient {
 	    String componentName, String componentVersion) throws Exception {
 
 	try {
-	    ApprovalStatus policyStatus = svc.getFromAbsoluteUrl(
+	    ApprovalStatus policyStatus = svc.getLinkedResourceFromAbsoluteUrl(
 		    ApprovalStatus.class, policyStatusLink);
 	    log.info("Approval Status: " + policyStatus);
 	    if ("NOT_IN_VIOLATION".equals(policyStatus.getApprovalStatus())) {
@@ -239,8 +240,8 @@ public class HubCommonClient {
 	}
 
 	try {
-	    PolicyRule policyRule = svc.getFromAbsoluteUrl(PolicyRule.class,
-		    policyLink);
+	    PolicyRule policyRule = svc.getResourceFromAbsoluteUrl(
+		    PolicyRule.class, policyLink);
 	    JiraTicket jiraTicket = new JiraTicket(notificationTimeStamp,
 		    JiraTicketType.RULE_VIOLATION, projectName, projectVersion,
 		    componentName, componentVersion, null,
@@ -278,7 +279,7 @@ public class HubCommonClient {
 	    throws URISyntaxException, IOException,
 	    NotificationServiceException {
 
-	ProjectVersionItem versionItem = svc.getFromAbsoluteUrl(
+	ProjectVersionItem versionItem = svc.getLinkedResourceFromAbsoluteUrl(
 		ProjectVersionItem.class, projectVersionLink);
 
 	String vulnerableComponentsLink = versionItem
@@ -297,7 +298,7 @@ public class HubCommonClient {
 	    IOException, NotificationServiceException {
 
 	VulnerableComponentsResponse vulnCompsResponse = svc
-		.getFromAbsoluteUrl(VulnerableComponentsResponse.class,
+		.getResourceFromAbsoluteUrl(VulnerableComponentsResponse.class,
 			vulnerableComponentsLink);
 
 	for (VulnerableComponentItem vulnerableComponentItem : vulnCompsResponse

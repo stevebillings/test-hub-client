@@ -14,12 +14,16 @@ import org.junit.Test;
 
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
+import com.blackducksoftware.tools.testhubclient.json.MetaWithLinksDeserializer;
+import com.blackducksoftware.tools.testhubclient.json.MetaWithoutLinksDeserializer;
+import com.blackducksoftware.tools.testhubclient.model.Meta;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
 import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
+import com.blackducksoftware.tools.testhubclient.model.projectversion.ProjectVersionItem;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -40,12 +44,13 @@ public class HubNotificationDaoTest {
     }
 
     @Test
-    public void testGetFromUrl() throws Exception {
+    public void testGetFromUrlWithoutLinks() throws Exception {
 
 	NotificationItem notifItem = hub
 		.getFromAbsoluteUrl(
 			NotificationItem.class,
-			"http://eng-hub-valid03.dc1.lan/api/notifications/51b42223-c093-4305-b383-ba73a02fcd30");
+			"http://eng-hub-valid03.dc1.lan/api/notifications/51b42223-c093-4305-b383-ba73a02fcd30",
+			new MetaWithoutLinksDeserializer<Meta>());
 	System.out.println(notifItem);
 	assertEquals("application/json", notifItem.getContentType());
 	assertEquals("RULE_VIOLATION", notifItem.getType());
@@ -57,6 +62,30 @@ public class HubNotificationDaoTest {
 	assertEquals(
 		"Instantiated via gson from JsonObject fetched from Hub by HubNotificationDao",
 		notifItem.getDescription());
+    }
+
+    @Test
+    public void testGetFromUrlWithLinks() throws Exception {
+
+	ProjectVersionItem projectVersionItem = hub
+		.getFromAbsoluteUrl(
+			ProjectVersionItem.class,
+			"http://eng-hub-valid03.dc1.lan/api/projects/fa359df3-3319-4f6d-a00b-fe5ae5e8c15e/versions/dc377e25-4d16-4e58-91f0-8a90f4d23aa1",
+			new MetaWithLinksDeserializer<Meta>());
+	System.out.println(projectVersionItem);
+
+	assertEquals("GET", projectVersionItem.getMeta().getAllow().get(0));
+	assertEquals(
+		"http://eng-hub-valid03.dc1.lan/api/projects/fa359df3-3319-4f6d-a00b-fe5ae5e8c15e/versions/dc377e25-4d16-4e58-91f0-8a90f4d23aa1",
+		projectVersionItem.getMeta().getHref());
+	assertEquals(
+		"Instantiated via gson from JsonObject fetched from Hub by HubNotificationDao",
+		projectVersionItem.getDescription());
+
+	// Test a link
+	assertEquals(
+		"http://eng-hub-valid03.dc1.lan/api/projects/fa359df3-3319-4f6d-a00b-fe5ae5e8c15e",
+		projectVersionItem.getLink("project"));
     }
 
     @Test
@@ -72,7 +101,8 @@ public class HubNotificationDaoTest {
 		"2016-05-02T00:00:00.000Z"));
 	queryParameters.add(new NameValuePair("limit", "1"));
 	NotificationResponse notifResponse = hub.getFromRelativeUrl(
-		NotificationResponse.class, urlSegments, queryParameters);
+		NotificationResponse.class, urlSegments, queryParameters,
+		new MetaWithoutLinksDeserializer<Meta>());
 	List<NotificationItem> notifs = notifResponse.getItems();
 	for (NotificationItem notif : notifs) {
 	    System.out.println(notif);
@@ -93,7 +123,8 @@ public class HubNotificationDaoTest {
 	queryParameters.add(new NameValuePair("limit", "100"));
 	NotificationResponse notifResponse = hub
 		.getAndCacheItemsFromRelativeUrl(NotificationResponse.class,
-			urlSegments, queryParameters);
+			urlSegments, queryParameters,
+			new MetaWithoutLinksDeserializer<Meta>());
 
 	for (NotificationItem genericNotif : notifResponse.getItems()) {
 	    if ("VULNERABILITY".equals(genericNotif.getType())) {
@@ -154,7 +185,8 @@ public class HubNotificationDaoTest {
 	JsonObject json = parser.parse(response).getAsJsonObject();
 	JsonArray array = json.get("items").getAsJsonArray();
 
-	JsonModelParser jsonModelParser = new JsonModelParser();
+	JsonModelParser jsonModelParser = new JsonModelParser(
+		new MetaWithoutLinksDeserializer<Meta>());
 	NotificationItem notifItem = jsonModelParser.parse(
 		NotificationItem.class, array.get(0));
 

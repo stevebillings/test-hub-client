@@ -11,7 +11,12 @@ public interface NotificationService {
 
     String getVersion() throws NotificationServiceException;
 
-    public <T extends ModelClass> T getFromAbsoluteUrl(Class<T> modelClass,
-	    String url) throws NotificationServiceException;
+    public <T extends ModelClass> T getLinkedResourceFromAbsoluteUrl(
+	    Class<T> modelClass, String url)
+	    throws NotificationServiceException;
+
+    public <T extends ModelClass> T getResourceFromAbsoluteUrl(
+	    Class<T> modelClass, String url)
+	    throws NotificationServiceException;
 
 }
