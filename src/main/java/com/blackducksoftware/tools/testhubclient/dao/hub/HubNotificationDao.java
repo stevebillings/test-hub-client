@@ -63,6 +63,7 @@ public class HubNotificationDao implements NotificationDao {
 	} catch (URISyntaxException e) {
 	    throw new NotificationDaoException(e.getMessage());
 	}
+	reUsableResource.setMethod(Method.GET);
     }
 
     @Override
@@ -150,7 +151,6 @@ public class HubNotificationDao implements NotificationDao {
 	    Set<NameValuePair> queryParameters) throws NotificationDaoException {
 
 	Reference queryRef = new Reference(hubUrl);
-
 	for (String urlSegment : urlSegments) {
 	    queryRef.addSegment(urlSegment);
 	}
@@ -160,7 +160,6 @@ public class HubNotificationDao implements NotificationDao {
 	}
 	reUsableResource.setReference(queryRef);
 
-	reUsableResource.setMethod(Method.GET);
 	reUsableResource.handle();
 	return reUsableResource;
     }
@@ -230,7 +229,6 @@ public class HubNotificationDao implements NotificationDao {
 	final ClientResource resource = getClientResourceWithGivenLink(cookies,
 		givenLink);
 
-	resource.setMethod(Method.GET);
 	resource.handle();
 	return resource;
     }
