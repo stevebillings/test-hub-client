@@ -104,7 +104,7 @@ public class HubCommonClient {
 	    PolicyOverrideNotificationItem policyOverrideNotif)
 	    throws Exception {
 	PolicyStatus compPolicyStatus = getCompPolicyStatusFromLink(policyOverrideNotif
-		.getContent().getBomComponentVersionPolicyStatus());
+		.getContent().getBomComponentVersionPolicyStatusLink());
 	String compPolicyStatusString = "<null>";
 	if (compPolicyStatus != null) {
 	    compPolicyStatusString = compPolicyStatus.getOverallStatus();

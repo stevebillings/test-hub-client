@@ -5,10 +5,10 @@ import java.util.List;
 import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 
 public class NotificationResponse extends ModelClass {
-    private String totalCount;
+    private int totalCount;
     private List<NotificationItem> items;
 
-    public String getTotalCount() {
+    public int getTotalCount() {
 	return totalCount;
     }
 
@@ -16,7 +16,7 @@ public class NotificationResponse extends ModelClass {
 	return items;
     }
 
-    public void setTotalCount(String totalCount) {
+    public void setTotalCount(int totalCount) {
 	this.totalCount = totalCount;
     }
 

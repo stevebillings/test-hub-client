@@ -2,12 +2,16 @@ package com.blackducksoftware.tools.testhubclient.model.notification;
 
 import java.util.List;
 
+import com.google.gson.annotations.SerializedName;
+
 public class RuleViolationNotificationContent {
     private String projectName;
     private String projectVersionName;
-    private String componentVersionsInViolation;
+    private int componentVersionsInViolation;
     private List<ComponentVersionStatus> componentVersionStatuses;
-    private String projectVersion;
+
+    @SerializedName("projectVersion")
+    private String projectVersionLink;
 
     public String getProjectName() {
 	return projectName;
@@ -17,7 +21,7 @@ public class RuleViolationNotificationContent {
 	return projectVersionName;
     }
 
-    public String getComponentVersionsInViolation() {
+    public int getComponentVersionsInViolation() {
 	return componentVersionsInViolation;
     }
 
@@ -25,8 +29,8 @@ public class RuleViolationNotificationContent {
 	return componentVersionStatuses;
     }
 
-    public String getProjectVersion() {
-	return projectVersion;
+    public String getProjectVersionLink() {
+	return projectVersionLink;
     }
 
     @Override
@@ -35,8 +39,8 @@ public class RuleViolationNotificationContent {
 		+ ", projectVersionName=" + projectVersionName
 		+ ", componentVersionsInViolation="
 		+ componentVersionsInViolation + ", componentVersionStatuses="
-		+ componentVersionStatuses + ", projectVersion="
-		+ projectVersion + "]";
+		+ componentVersionStatuses + ", projectVersionLink="
+		+ projectVersionLink + "]";
     }
 
 }

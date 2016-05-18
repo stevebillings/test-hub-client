@@ -1,5 +1,7 @@
 package com.blackducksoftware.tools.testhubclient.model.notification;
 
+import com.google.gson.annotations.SerializedName;
+
 public class PolicyOverrideNotificationContent {
     private String projectName;
     private String projectVersionName;
@@ -7,9 +9,15 @@ public class PolicyOverrideNotificationContent {
     private String componentVersionName;
     private String firstName;
     private String lastName;
-    private String projectVersion;
-    private String componentVersion;
-    private String bomComponentVersionPolicyStatus;
+
+    @SerializedName("projectVersion")
+    private String projectVersionLink;
+
+    @SerializedName("componentVersion")
+    private String componentVersionLink;
+
+    @SerializedName("bomComponentVersionPolicyStatus")
+    private String bomComponentVersionPolicyStatusLink;
 
     public String getProjectName() {
 	return projectName;
@@ -35,16 +43,16 @@ public class PolicyOverrideNotificationContent {
 	return lastName;
     }
 
-    public String getProjectVersion() {
-	return projectVersion;
+    public String getProjectVersionLink() {
+	return projectVersionLink;
     }
 
-    public String getComponentVersion() {
-	return componentVersion;
+    public String getComponentVersionLink() {
+	return componentVersionLink;
     }
 
-    public String getBomComponentVersionPolicyStatus() {
-	return bomComponentVersionPolicyStatus;
+    public String getBomComponentVersionPolicyStatusLink() {
+	return bomComponentVersionPolicyStatusLink;
     }
 
     @Override
@@ -54,9 +62,10 @@ public class PolicyOverrideNotificationContent {
 		+ ", componentName=" + componentName
 		+ ", componentVersionName=" + componentVersionName
 		+ ", firstName=" + firstName + ", lastName=" + lastName
-		+ ", projectVersion=" + projectVersion + ", componentVersion="
-		+ componentVersion + ", bomComponentVersionPolicyStatus="
-		+ bomComponentVersionPolicyStatus + "]";
+		+ ", projectVersionLink=" + projectVersionLink
+		+ ", componentVersionLink=" + componentVersionLink
+		+ ", bomComponentVersionPolicyStatusLink="
+		+ bomComponentVersionPolicyStatusLink + "]";
     }
 
 }
