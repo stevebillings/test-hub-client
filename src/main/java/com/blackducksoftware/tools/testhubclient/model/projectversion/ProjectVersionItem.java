@@ -5,27 +5,26 @@ import com.blackducksoftware.tools.testhubclient.model.Link;
 
 public class ProjectVersionItem extends Item {
     private String versionName;
-    private String phase;
-    private String distribution;
-    private String source;
+    private Phase phase;
+    private Distribution distribution;
+    private Source source;
 
     public String getVersionName() {
 	return versionName;
     }
 
-    public String getPhase() {
+    public Phase getPhase() {
 	return phase;
     }
 
-    public String getDistribution() {
+    public Distribution getDistribution() {
 	return distribution;
     }
 
-    public String getSource() {
+    public Source getSource() {
 	return source;
     }
 
-    // TODO should extend AbstractLinkedResource instead of this
     public String getLink(final String linkRel) {
 	if (getMeta() != null && getMeta().getLinks() != null
 		&& !getMeta().getLinks().isEmpty()) {

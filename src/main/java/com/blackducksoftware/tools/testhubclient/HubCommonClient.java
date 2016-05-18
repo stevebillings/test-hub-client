@@ -289,7 +289,7 @@ public class HubCommonClient {
 
 	ProjectVersionItem versionItem = svc.getLinkedResourceFromAbsoluteUrl(
 		ProjectVersionItem.class, projectVersionLink);
-
+	log.info(versionItem.toString()); // TODO change to debug
 	String vulnerableComponentsLink = versionItem
 		.getLink("vulnerable-components");
 	log.debug("Link to vulnerable components: " + vulnerableComponentsLink);
