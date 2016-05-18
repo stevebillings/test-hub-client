@@ -3,10 +3,16 @@ package com.blackducksoftware.tools.testhubclient.model.policy;
 import com.blackducksoftware.tools.testhubclient.model.Item;
 import com.blackducksoftware.tools.testhubclient.model.Link;
 
+/**
+ * Describes Rule Violation status
+ * 
+ * @author sbillings
+ *
+ */
 public class ApprovalStatusItem extends Item {
-    private String approvalStatus;
+    private PolicyStatus approvalStatus;
 
-    public String getApprovalStatus() {
+    public PolicyStatus getApprovalStatus() {
 	return approvalStatus;
     }
 

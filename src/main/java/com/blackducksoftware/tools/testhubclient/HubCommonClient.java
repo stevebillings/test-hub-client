@@ -19,6 +19,7 @@ import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolatio
 import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.VulnerableComponentsResponse;
 import com.blackducksoftware.tools.testhubclient.model.policy.ApprovalStatusItem;
+import com.blackducksoftware.tools.testhubclient.model.policy.BomComponentVersionPolicyStatus;
 import com.blackducksoftware.tools.testhubclient.model.policy.PolicyRule;
 import com.blackducksoftware.tools.testhubclient.model.policy.PolicyStatus;
 import com.blackducksoftware.tools.testhubclient.model.projectversion.ProjectVersion;
@@ -103,7 +104,7 @@ public class HubCommonClient {
     private void processPolicyOverrideNotification(Date notificationTimeStamp,
 	    PolicyOverrideNotificationItem policyOverrideNotif)
 	    throws Exception {
-	PolicyStatus compPolicyStatus = getCompPolicyStatusFromLink(policyOverrideNotif
+	BomComponentVersionPolicyStatus compPolicyStatus = getCompPolicyStatusFromLink(policyOverrideNotif
 		.getContent().getBomComponentVersionPolicyStatusLink());
 	String compPolicyStatusString = "<null>";
 	if (compPolicyStatus != null) {
@@ -145,17 +146,19 @@ public class HubCommonClient {
 	}
     }
 
-    private PolicyStatus getCompPolicyStatusFromLink(String compPolicyStatusLink)
-	    throws Exception {
+    private BomComponentVersionPolicyStatus getCompPolicyStatusFromLink(
+	    String compPolicyStatusLink) throws Exception {
 
 	if (compPolicyStatusLink == null) {
 	    return null;
 	}
 
-	PolicyStatus policyStatus = null;
+	BomComponentVersionPolicyStatus policyStatus = null;
 	try {
-	    policyStatus = svc.getResourceFromAbsoluteUrl(PolicyStatus.class,
-		    compPolicyStatusLink);
+	    policyStatus = svc
+		    .getResourceFromAbsoluteUrl(
+			    BomComponentVersionPolicyStatus.class,
+			    compPolicyStatusLink);
 	} catch (NotificationServiceException e) {
 	    log.warn("Error getting policy status from " + compPolicyStatusLink
 		    + ": " + e.getMessage()
@@ -210,7 +213,8 @@ public class HubCommonClient {
 		    .getLinkedResourceFromAbsoluteUrl(ApprovalStatusItem.class,
 			    policyStatusLink);
 	    log.info("Approval Status: " + policyStatus);
-	    if ("NOT_IN_VIOLATION".equals(policyStatus.getApprovalStatus())) {
+	    if (PolicyStatus.NOT_IN_VIOLATION.equals(policyStatus
+		    .getApprovalStatus())) {
 		log.info("Not generating a ticket");
 		return; // don't need a ticket if it's not in violation
 	    }

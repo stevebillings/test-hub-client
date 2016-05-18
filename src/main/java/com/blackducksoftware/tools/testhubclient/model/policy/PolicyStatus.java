@@ -1,23 +1,11 @@
 package com.blackducksoftware.tools.testhubclient.model.policy;
 
-import com.blackducksoftware.tools.testhubclient.model.ModelClass;
-
-public class PolicyStatus extends ModelClass {
-    private String overallStatus;
-    private String updatedAt;
-
-    public String getOverallStatus() {
-	return overallStatus;
-    }
-
-    public String getUpdatedAt() {
-	return updatedAt;
-    }
-
-    @Override
-    public String toString() {
-	return "PolicyStatus [overallStatus=" + overallStatus + ", updatedAt="
-		+ updatedAt + "]";
-    }
-
+/**
+ * Status relative to policy.
+ * 
+ * @author sbillings
+ *
+ */
+public enum PolicyStatus {
+    IN_VIOLATION, NOT_IN_VIOLATION, IN_VIOLATION_OVERRIDEN
 }

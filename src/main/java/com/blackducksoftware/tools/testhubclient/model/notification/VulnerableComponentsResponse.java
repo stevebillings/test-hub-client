@@ -6,10 +6,10 @@ import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.component.VulnerableComponentItem;
 
 public class VulnerableComponentsResponse extends ModelClass {
-    private String totalCount;
+    private int totalCount;
     private List<VulnerableComponentItem> items;
 
-    public String getTotalCount() {
+    public int getTotalCount() {
 	return totalCount;
     }
 
