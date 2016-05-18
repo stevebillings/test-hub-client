@@ -106,15 +106,16 @@ public class HubCommonClient {
 	    throws Exception {
 	BomComponentVersionPolicyStatus compPolicyStatus = getCompPolicyStatusFromLink(policyOverrideNotif
 		.getContent().getBomComponentVersionPolicyStatusLink());
-	String compPolicyStatusString = "<null>";
+	PolicyStatus policyStatus = null;
+
 	if (compPolicyStatus != null) {
-	    compPolicyStatusString = compPolicyStatus.getOverallStatus();
+	    policyStatus = compPolicyStatus.getOverallStatus();
 	} else {
 	    log.error("Component Policy Status is null");
 	}
-	log.info("Overall policy status: " + compPolicyStatusString);
+	log.info("Overall policy status: " + policyStatus);
 	log.info("\tWas updated at: " + compPolicyStatus.getUpdatedAt());
-	if (!"IN_VIOLATION_OVERRIDDEN".equals(compPolicyStatusString)) {
+	if (!PolicyStatus.IN_VIOLATION_OVERRIDEN.equals(policyStatus)) {
 	    log.info("No ticket being generated");
 	    return;
 	}
@@ -273,7 +274,7 @@ public class HubCommonClient {
 	for (ProjectVersion affectedProjectVersion : vulnNotif.getContent()
 		.getAffectedProjectVersions()) {
 	    processProjectVersionLink(notificationTimeStamp,
-		    affectedProjectVersion.getProjectVersion(),
+		    affectedProjectVersion.projectVersionLink(),
 		    affectedProjectVersion.getProjectName(), vulnNotif
 			    .getContent().getComponentName(), vulnNotif
 			    .getContent().getVersionName());
