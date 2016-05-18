@@ -4,15 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Meta {
-    public List<String> allow = new ArrayList<String>();
-    public String href;
+    public List<HttpMethod> allow = new ArrayList<>(); // Operations supported
+    public String href; // Link to the resource that this meta is included in
     private List<Link> links;
 
-    public List<String> getAllow() {
+    public List<HttpMethod> getAllow() {
 	return allow;
     }
 
-    public void setAllow(List<String> allow) {
+    public void setAllow(List<HttpMethod> allow) {
 	this.allow = allow;
     }
 

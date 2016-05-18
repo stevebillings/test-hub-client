@@ -14,6 +14,7 @@ import org.junit.Test;
 
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
+import com.blackducksoftware.tools.testhubclient.model.HttpMethod;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
@@ -53,7 +54,7 @@ public class HubNotificationDaoTest {
 	assertEquals("application/json", notifItem.getContentType());
 	assertEquals(NotificationType.RULE_VIOLATION, notifItem.getType());
 	assertEquals(1460920827990L, notifItem.getCreatedAt().getTime());
-	assertEquals("GET", notifItem.getMeta().getAllow().get(0));
+	assertEquals(HttpMethod.GET, notifItem.getMeta().getAllow().get(0));
 	assertEquals(
 		"http://eng-hub-valid03.dc1.lan/api/notifications/51b42223-c093-4305-b383-ba73a02fcd30",
 		notifItem.getMeta().getHref());
@@ -71,7 +72,8 @@ public class HubNotificationDaoTest {
 			"http://eng-hub-valid03.dc1.lan/api/projects/fa359df3-3319-4f6d-a00b-fe5ae5e8c15e/versions/dc377e25-4d16-4e58-91f0-8a90f4d23aa1");
 	System.out.println(projectVersionItem);
 
-	assertEquals("GET", projectVersionItem.getMeta().getAllow().get(0));
+	assertEquals(HttpMethod.GET, projectVersionItem.getMeta().getAllow()
+		.get(0));
 	assertEquals(
 		"http://eng-hub-valid03.dc1.lan/api/projects/fa359df3-3319-4f6d-a00b-fe5ae5e8c15e/versions/dc377e25-4d16-4e58-91f0-8a90f4d23aa1",
 		projectVersionItem.getMeta().getHref());
@@ -190,7 +192,7 @@ public class HubNotificationDaoTest {
 	assertEquals("application/json", notifItem.getContentType());
 	assertEquals(NotificationType.RULE_VIOLATION, notifItem.getType());
 	assertEquals(1462114809830L, notifItem.getCreatedAt().getTime());
-	assertEquals("GET", notifItem.getMeta().getAllow().get(0));
+	assertEquals(HttpMethod.GET, notifItem.getMeta().getAllow().get(0));
 	assertEquals(
 		"http://eng-hub-valid03.dc1.lan/api/notifications/e5071453-cbae-457f-b84c-9d60c79d0409",
 		notifItem.getMeta().getHref());
