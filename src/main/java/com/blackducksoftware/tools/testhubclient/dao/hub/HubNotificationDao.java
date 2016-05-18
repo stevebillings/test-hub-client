@@ -3,17 +3,16 @@ package com.blackducksoftware.tools.testhubclient.dao.hub;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.restlet.Context;
 import org.restlet.Response;
 import org.restlet.data.Cookie;
 import org.restlet.data.Method;
+import org.restlet.data.Reference;
 import org.restlet.resource.ClientResource;
 import org.restlet.util.Series;
 
@@ -44,17 +43,26 @@ public class HubNotificationDao implements NotificationDao {
     private String dateFormat;
     private ClientLogger log = new ClientLogger();
     private HubIntRestService hub;
+    private String hubUrl;
     private Map<String, JsonElement> itemJsonCache; // URL -> Json Element cache
     private final JsonModelParser jsonModelParser;
+    private final ClientResource reUsableResource;
 
     public HubNotificationDao(String hubUrl, String username, String password,
 	    String dateFormat) throws HubIntegrationException,
-	    URISyntaxException, BDRestException {
+	    URISyntaxException, BDRestException, NotificationDaoException {
+	this.hubUrl = hubUrl;
 	hub = new HubIntRestService(hubUrl);
 	hub.setCookies(username, password);
 	itemJsonCache = new HashMap<>();
 	jsonModelParser = new JsonModelParser(dateFormat);
 	this.dateFormat = dateFormat;
+
+	try {
+	    reUsableResource = hub.createClientResource();
+	} catch (URISyntaxException e) {
+	    throw new NotificationDaoException(e.getMessage());
+	}
     }
 
     @Override
@@ -62,7 +70,7 @@ public class HubNotificationDao implements NotificationDao {
 	    List<String> urlSegments, Set<NameValuePair> queryParameters)
 	    throws NotificationDaoException {
 
-	final ClientResource resource = createClientResourceForGet(urlSegments,
+	final ClientResource resource = getClientResourceForGet(urlSegments,
 		queryParameters);
 	log.info("Resource: " + resource);
 	int responseCode = resource.getResponse().getStatus().getCode();
@@ -91,7 +99,7 @@ public class HubNotificationDao implements NotificationDao {
 	    Class<T> modelClass, List<String> urlSegments,
 	    Set<NameValuePair> queryParameters) throws NotificationDaoException {
 
-	final ClientResource resource = createClientResourceForGet(urlSegments,
+	final ClientResource resource = getClientResourceForGet(urlSegments,
 		queryParameters);
 	log.info("Resource: " + resource);
 	int responseCode = resource.getResponse().getStatus().getCode();
@@ -138,25 +146,23 @@ public class HubNotificationDao implements NotificationDao {
 
     }
 
-    private ClientResource createClientResourceForGet(List<String> urlSegments,
+    private ClientResource getClientResourceForGet(List<String> urlSegments,
 	    Set<NameValuePair> queryParameters) throws NotificationDaoException {
-	ClientResource resource;
-	try {
-	    resource = hub.createClientResource();
-	} catch (URISyntaxException e) {
-	    throw new NotificationDaoException(e.getMessage());
-	}
+
+	Reference queryRef = new Reference(hubUrl);
+
 	for (String urlSegment : urlSegments) {
-	    resource.addSegment(urlSegment);
+	    queryRef.addSegment(urlSegment);
 	}
 	for (NameValuePair queryParameter : queryParameters) {
-	    resource.addQueryParameter(queryParameter.getName(),
+	    queryRef.addQueryParameter(queryParameter.getName(),
 		    queryParameter.getValue());
 	}
+	reUsableResource.setReference(queryRef);
 
-	resource.setMethod(Method.GET);
-	resource.handle();
-	return resource;
+	reUsableResource.setMethod(Method.GET);
+	reUsableResource.handle();
+	return reUsableResource;
     }
 
     public <T extends ModelClass> T getFromAbsoluteUrl(Class<T> modelClass,
@@ -166,7 +172,7 @@ public class HubNotificationDao implements NotificationDao {
 	    return null;
 	}
 
-	final ClientResource resource = createGetClientResourceWithGivenLink(
+	final ClientResource resource = getGetClientResourceWithGivenLink(
 		hub.getCookies(), url);
 
 	log.debug("Resource: " + resource);
@@ -218,43 +224,25 @@ public class HubNotificationDao implements NotificationDao {
 	return sb.toString();
     }
 
-    private ClientResource createGetClientResourceWithGivenLink(
+    private ClientResource getGetClientResourceWithGivenLink(
 	    Series<Cookie> cookies, String givenLink)
 	    throws NotificationDaoException {
-	final ClientResource resource = createClientResourceWithGivenLink(
-		cookies, givenLink);
+	final ClientResource resource = getClientResourceWithGivenLink(cookies,
+		givenLink);
 
 	resource.setMethod(Method.GET);
 	resource.handle();
 	return resource;
     }
 
-    private ClientResource createClientResourceWithGivenLink(
+    private ClientResource getClientResourceWithGivenLink(
 	    Series<Cookie> cookies, String givenLink)
 	    throws NotificationDaoException {
 
-	final Context context = new Context();
+	Reference queryRef = new Reference(givenLink);
+	reUsableResource.setReference(queryRef);
 
-	// the socketTimeout parameter is used in the httpClient extension that
-	// we do not use
-	// We can probably remove this parameter
-	final String stringTimeout = String.valueOf(120000);
-
-	context.getParameters().add("socketTimeout", stringTimeout);
-
-	context.getParameters().add("socketConnectTimeoutMs", stringTimeout);
-	context.getParameters().add("readTimeout", stringTimeout);
-	// Should throw timeout exception after the specified timeout, default
-	// is 2 minutes
-
-	ClientResource resource;
-	try {
-	    resource = new ClientResource(context, new URI(givenLink));
-	} catch (URISyntaxException e) {
-	    throw new NotificationDaoException(e.getMessage());
-	}
-	resource.getRequest().setCookies(cookies);
-	return resource;
+	return reUsableResource;
     }
 
     @Override
