@@ -24,6 +24,7 @@ import com.blackducksoftware.tools.testhubclient.model.policy.PolicyRule;
 import com.blackducksoftware.tools.testhubclient.model.policy.PolicyStatus;
 import com.blackducksoftware.tools.testhubclient.model.projectversion.ProjectVersion;
 import com.blackducksoftware.tools.testhubclient.model.projectversion.ProjectVersionItem;
+import com.blackducksoftware.tools.testhubclient.model.vulnerability.RemediationStatus;
 import com.blackducksoftware.tools.testhubclient.service.NotificationService;
 import com.blackducksoftware.tools.testhubclient.service.NotificationServiceException;
 import com.blackducksoftware.tools.testhubclient.service.impl.NotificationServiceImpl;
@@ -323,8 +324,10 @@ public class HubCommonClient {
 		log.debug("Wrong component version; skipping this one");
 		continue;
 	    }
-	    if ("REMEDIATION_REQUIRED".equals(vulnerableComponentItem
-		    .getVulnerabilityWithRemediation().getRemediationStatus())) {
+	    if (RemediationStatus.REMEDIATION_REQUIRED
+		    .equals(vulnerableComponentItem
+			    .getVulnerabilityWithRemediation()
+			    .getRemediationStatus())) {
 
 		JiraTicket jiraTicket = new JiraTicket(notificationTimeStamp,
 			JiraTicketType.VULNERABILITY, projectName,
@@ -336,7 +339,7 @@ public class HubCommonClient {
 		System.out.println(jiraTicket);
 		addToMap(jiraTicket);
 	    }
-	    if ("NEEDS_REVIEW".equals(vulnerableComponentItem
+	    if (RemediationStatus.NEEDS_REVIEW.equals(vulnerableComponentItem
 		    .getVulnerabilityWithRemediation().getRemediationStatus())) {
 
 		JiraTicket jiraTicket = new JiraTicket(notificationTimeStamp,
