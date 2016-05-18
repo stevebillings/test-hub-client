@@ -1,16 +1,13 @@
 package com.blackducksoftware.tools.testhubclient.model.projectversion;
 
+import com.blackducksoftware.tools.testhubclient.model.Item;
 import com.blackducksoftware.tools.testhubclient.model.Link;
-import com.blackducksoftware.tools.testhubclient.model.ModelClass;
-import com.google.gson.annotations.SerializedName;
 
-public class ProjectVersionItem extends ModelClass {
+public class ProjectVersionItem extends Item {
     private String versionName;
     private String phase;
     private String distribution;
     private String source;
-    @SerializedName("_meta")
-    private ProjectVersionMeta meta;
 
     public String getVersionName() {
 	return versionName;
@@ -26,10 +23,6 @@ public class ProjectVersionItem extends ModelClass {
 
     public String getSource() {
 	return source;
-    }
-
-    public ProjectVersionMeta getMeta() {
-	return meta;
     }
 
     // TODO should extend AbstractLinkedResource instead of this
@@ -49,7 +42,7 @@ public class ProjectVersionItem extends ModelClass {
     public String toString() {
 	return "VersionItem [versionName=" + versionName + ", phase=" + phase
 		+ ", distribution=" + distribution + ", source=" + source
-		+ ", meta=" + meta + "]";
+		+ ", meta=" + getMeta() + "]";
     }
 
 }
