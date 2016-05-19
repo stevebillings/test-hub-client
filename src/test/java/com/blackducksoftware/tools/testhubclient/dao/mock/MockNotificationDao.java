@@ -8,7 +8,6 @@ import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.model.Item;
 import com.blackducksoftware.tools.testhubclient.model.Meta;
-import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
@@ -56,7 +55,7 @@ public class MockNotificationDao implements NotificationDao {
     }
 
     @Override
-    public <T extends ModelClass> T getFromRelativeUrl(Class<T> modelClass,
+    public <T> T getFromRelativeUrl(Class<T> modelClass,
 	    List<String> urlSegments, Set<NameValuePair> queryParameters)
 	    throws NotificationDaoException {
 
@@ -84,16 +83,16 @@ public class MockNotificationDao implements NotificationDao {
     }
 
     @Override
-    public <T extends ModelClass> T getFromAbsoluteUrl(Class<T> modelClass,
-	    String url) throws NotificationDaoException {
+    public <T> T getFromAbsoluteUrl(Class<T> modelClass, String url)
+	    throws NotificationDaoException {
 	throw new UnsupportedOperationException(
 		"getFromAbsoluteUrl() not implemented");
     }
 
     @Override
-    public <T extends ModelClass> T getAndCacheItemsFromRelativeUrl(
-	    Class<T> modelClass, List<String> urlSegments,
-	    Set<NameValuePair> queryParameters) throws NotificationDaoException {
+    public <T> T getAndCacheItemsFromRelativeUrl(Class<T> modelClass,
+	    List<String> urlSegments, Set<NameValuePair> queryParameters)
+	    throws NotificationDaoException {
 
 	return getFromRelativeUrl(modelClass, urlSegments, queryParameters);
     }
@@ -105,21 +104,18 @@ public class MockNotificationDao implements NotificationDao {
 		&& (TEST_ITEM_URL.equals(itemUrl))) {
 	    VulnerabilityNotificationItem item = new VulnerabilityNotificationItem();
 	    item.setContentType("testItemCreatedAt");
-	    item.setDescription("mock item");
 	    item.setType(NotificationType.VULNERABILITY);
 	    return (T) (item);
 	} else if ((itemClass == RuleViolationNotificationItem.class)
 		&& (TEST_ITEM_URL.equals(itemUrl))) {
 	    RuleViolationNotificationItem item = new RuleViolationNotificationItem();
 	    item.setContentType("testItemCreatedAt");
-	    item.setDescription("mock item");
 	    item.setType(NotificationType.RULE_VIOLATION);
 	    return (T) (item);
 	} else if ((itemClass == PolicyOverrideNotificationItem.class)
 		&& (TEST_ITEM_URL.equals(itemUrl))) {
 	    PolicyOverrideNotificationItem item = new PolicyOverrideNotificationItem();
 	    item.setContentType("testItemCreatedAt");
-	    item.setDescription("mock item");
 	    item.setType(NotificationType.RULE_VIOLATION);
 	    return (T) (item);
 	} else {

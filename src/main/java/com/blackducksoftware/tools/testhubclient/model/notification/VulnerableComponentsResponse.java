@@ -2,10 +2,9 @@ package com.blackducksoftware.tools.testhubclient.model.notification;
 
 import java.util.List;
 
-import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.component.VulnerableComponentItem;
 
-public class VulnerableComponentsResponse extends ModelClass {
+public class VulnerableComponentsResponse {
     private int totalCount;
     private List<VulnerableComponentItem> items;
 
@@ -20,8 +19,7 @@ public class VulnerableComponentsResponse extends ModelClass {
     @Override
     public String toString() {
 	return "VulnerableComponentsResponse [totalCount=" + totalCount
-		+ ", items=" + items + ", getDescription()=" + getDescription()
-		+ "]";
+		+ ", items=" + items + "]";
     }
 
 }

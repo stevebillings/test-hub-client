@@ -2,7 +2,7 @@ package com.blackducksoftware.tools.testhubclient.model;
 
 import com.google.gson.annotations.SerializedName;
 
-public class Item extends ModelClass {
+public class Item {
     @SerializedName("_meta")
     private Meta meta;
 

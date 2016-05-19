@@ -37,7 +37,7 @@ public class NotificationItem extends Item {
     public String toString() {
 	return "NotificationItem [contentType=" + contentType + ", type="
 		+ type + ", createdAt=" + createdAt + ", Meta=" + getMeta()
-		+ ", getDescription()=" + getDescription() + "]";
+		+ "]";
     }
 
 }

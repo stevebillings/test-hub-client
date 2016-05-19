@@ -1,8 +1,7 @@
 package com.blackducksoftware.tools.testhubclient.model.component;
 
-import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 
-public class ComponentVersion extends ModelClass {
+public class ComponentVersion {
     private String versionName;
 
     public String getVersionName() {

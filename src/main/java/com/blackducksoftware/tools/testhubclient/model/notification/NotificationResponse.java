@@ -2,9 +2,7 @@ package com.blackducksoftware.tools.testhubclient.model.notification;
 
 import java.util.List;
 
-import com.blackducksoftware.tools.testhubclient.model.ModelClass;
-
-public class NotificationResponse extends ModelClass {
+public class NotificationResponse {
     private int totalCount;
     private List<NotificationItem> items;
 
@@ -27,7 +25,7 @@ public class NotificationResponse extends ModelClass {
     @Override
     public String toString() {
 	return "NotificationResponse [totalCount=" + totalCount + ", items="
-		+ items + ", getDescription()=" + getDescription() + "]";
+		+ items + "]";
     }
 
 }

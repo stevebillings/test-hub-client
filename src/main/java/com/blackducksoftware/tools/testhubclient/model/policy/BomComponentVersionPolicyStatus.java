@@ -2,9 +2,7 @@ package com.blackducksoftware.tools.testhubclient.model.policy;
 
 import java.util.Date;
 
-import com.blackducksoftware.tools.testhubclient.model.ModelClass;
-
-public class BomComponentVersionPolicyStatus extends ModelClass {
+public class BomComponentVersionPolicyStatus {
     private PolicyStatus overallStatus;
     private Date updatedAt;
 

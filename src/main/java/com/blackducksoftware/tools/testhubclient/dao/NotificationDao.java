@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.blackducksoftware.tools.testhubclient.model.Item;
-import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 
 /**
@@ -33,9 +32,8 @@ public interface NotificationDao {
      * @return
      * @throws NotificationDaoException
      */
-    <T extends ModelClass> T getFromRelativeUrl(Class<T> modelClass,
-	    List<String> urlSegments, Set<NameValuePair> queryParameters)
-	    throws NotificationDaoException;
+    <T> T getFromRelativeUrl(Class<T> modelClass, List<String> urlSegments,
+	    Set<NameValuePair> queryParameters) throws NotificationDaoException;
 
     /**
      * Get a resource consisting of a list of items (that will be cached) from
@@ -55,9 +53,9 @@ public interface NotificationDao {
      * @return
      * @throws NotificationDaoException
      */
-    <T extends ModelClass> T getAndCacheItemsFromRelativeUrl(
-	    Class<T> modelClass, List<String> urlSegments,
-	    Set<NameValuePair> queryParameters) throws NotificationDaoException;
+    <T> T getAndCacheItemsFromRelativeUrl(Class<T> modelClass,
+	    List<String> urlSegments, Set<NameValuePair> queryParameters)
+	    throws NotificationDaoException;
 
     /**
      * Reload an item from the item cache as the given type.
@@ -82,7 +80,7 @@ public interface NotificationDao {
      * @return
      * @throws NotificationDaoException
      */
-    <T extends ModelClass> T getFromAbsoluteUrl(Class<T> modelClass, String url)
+    <T> T getFromAbsoluteUrl(Class<T> modelClass, String url)
 	    throws NotificationDaoException;
 
 }

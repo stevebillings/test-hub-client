@@ -1,7 +1,6 @@
 package com.blackducksoftware.tools.testhubclient.json;
 
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
-import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -23,11 +22,7 @@ public class JsonModelParser {
      * @return
      * @throws NotificationDaoException
      */
-    public <T extends ModelClass> T parse(Class<T> modelClass, JsonElement elem) {
-	T modelObject = gson.fromJson(elem, modelClass);
-	modelObject
-		.setDescription("Instantiated via gson from JsonElement by JsonModelParser");
-
-	return modelObject;
+    public <T> T parse(Class<T> modelClass, JsonElement elem) {
+	return gson.fromJson(elem, modelClass);
     }
 }

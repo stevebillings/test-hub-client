@@ -24,7 +24,6 @@ import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
 import com.blackducksoftware.tools.testhubclient.model.Item;
-import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -67,7 +66,7 @@ public class HubNotificationDao implements NotificationDao {
     }
 
     @Override
-    public <T extends ModelClass> T getFromRelativeUrl(Class<T> modelClass,
+    public <T> T getFromRelativeUrl(Class<T> modelClass,
 	    List<String> urlSegments, Set<NameValuePair> queryParameters)
 	    throws NotificationDaoException {
 
@@ -83,8 +82,6 @@ public class HubNotificationDao implements NotificationDao {
 	    JsonParser parser = new JsonParser();
 	    JsonObject json = parser.parse(response).getAsJsonObject();
 	    T modelObject = gson.fromJson(json, modelClass);
-	    modelObject
-		    .setDescription("Instantiated via gson from JsonObject fetched from Hub by HubNotificationDao");
 
 	    return modelObject;
 	} else {
@@ -96,9 +93,9 @@ public class HubNotificationDao implements NotificationDao {
     }
 
     @Override
-    public <T extends ModelClass> T getAndCacheItemsFromRelativeUrl(
-	    Class<T> modelClass, List<String> urlSegments,
-	    Set<NameValuePair> queryParameters) throws NotificationDaoException {
+    public <T> T getAndCacheItemsFromRelativeUrl(Class<T> modelClass,
+	    List<String> urlSegments, Set<NameValuePair> queryParameters)
+	    throws NotificationDaoException {
 
 	final ClientResource resource = getClientResourceForGet(urlSegments,
 		queryParameters);
@@ -112,8 +109,6 @@ public class HubNotificationDao implements NotificationDao {
 	    JsonParser parser = new JsonParser();
 	    JsonObject json = parser.parse(response).getAsJsonObject();
 	    T modelObject = gson.fromJson(json, modelClass);
-	    modelObject
-		    .setDescription("Instantiated via gson from JsonObject fetched from Hub by HubNotificationDao");
 
 	    JsonArray array = json.get("items").getAsJsonArray();
 	    for (JsonElement elem : array) {
@@ -164,8 +159,8 @@ public class HubNotificationDao implements NotificationDao {
 	return reUsableResource;
     }
 
-    public <T extends ModelClass> T getFromAbsoluteUrl(Class<T> modelClass,
-	    String url) throws NotificationDaoException {
+    public <T> T getFromAbsoluteUrl(Class<T> modelClass, String url)
+	    throws NotificationDaoException {
 
 	if (url == null) {
 	    return null;
@@ -185,8 +180,6 @@ public class HubNotificationDao implements NotificationDao {
 	    JsonObject json = parser.parse(response).getAsJsonObject();
 
 	    T modelObject = gson.fromJson(json, modelClass);
-	    modelObject
-		    .setDescription("Instantiated via gson from JsonObject fetched from Hub by HubNotificationDao");
 	    return modelObject;
 	} else {
 	    throw new NotificationDaoException("Error getting resource from "

@@ -8,7 +8,6 @@ import java.util.Set;
 import com.blackducksoftware.tools.testhubclient.ClientLogger;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
-import com.blackducksoftware.tools.testhubclient.model.ModelClass;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
@@ -120,8 +119,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public <T extends ModelClass> T getResourceFromAbsoluteUrl(
-	    Class<T> modelClass, String url)
+    public <T> T getResourceFromAbsoluteUrl(Class<T> modelClass, String url)
 	    throws NotificationServiceException {
 	if (url == null) {
 	    throw new NotificationServiceException("URL provided is null");
@@ -134,9 +132,8 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public <T extends ModelClass> T getLinkedResourceFromAbsoluteUrl(
-	    Class<T> modelClass, String url)
-	    throws NotificationServiceException {
+    public <T> T getLinkedResourceFromAbsoluteUrl(Class<T> modelClass,
+	    String url) throws NotificationServiceException {
 	if (url == null) {
 	    throw new NotificationServiceException("URL provided is null");
 	}

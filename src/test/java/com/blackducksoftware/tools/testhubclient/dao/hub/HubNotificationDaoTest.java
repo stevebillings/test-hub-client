@@ -58,9 +58,6 @@ public class HubNotificationDaoTest {
 	assertEquals(
 		"http://eng-hub-valid03.dc1.lan/api/notifications/51b42223-c093-4305-b383-ba73a02fcd30",
 		notifItem.getMeta().getHref());
-	assertEquals(
-		"Instantiated via gson from JsonObject fetched from Hub by HubNotificationDao",
-		notifItem.getDescription());
     }
 
     @Test
@@ -77,9 +74,6 @@ public class HubNotificationDaoTest {
 	assertEquals(
 		"http://eng-hub-valid03.dc1.lan/api/projects/fa359df3-3319-4f6d-a00b-fe5ae5e8c15e/versions/dc377e25-4d16-4e58-91f0-8a90f4d23aa1",
 		projectVersionItem.getMeta().getHref());
-	assertEquals(
-		"Instantiated via gson from JsonObject fetched from Hub by HubNotificationDao",
-		projectVersionItem.getDescription());
 
 	// Test a link
 	assertEquals(
@@ -196,10 +190,6 @@ public class HubNotificationDaoTest {
 	assertEquals(
 		"http://eng-hub-valid03.dc1.lan/api/notifications/e5071453-cbae-457f-b84c-9d60c79d0409",
 		notifItem.getMeta().getHref());
-	assertEquals(
-		"Instantiated via gson from JsonElement by JsonModelParser",
-		notifItem.getDescription());
-
     }
 
 }
