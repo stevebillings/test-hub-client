@@ -74,7 +74,7 @@ public class HubNotificationDao implements NotificationDao {
 
 	try {
 	    return hub.getFromRelativeUrl(modelClass, urlSegments,
-		    queryParameters, dateFormat);
+		    queryParameters);
 	} catch (URISyntaxException | IOException
 		| ResourceDoesNotExistException e) {
 	    throw new NotificationDaoException(
@@ -160,7 +160,7 @@ public class HubNotificationDao implements NotificationDao {
 	    return null;
 	}
 	try {
-	    return hub.getFromAbsoluteUrl(modelClass, url, dateFormat);
+	    return hub.getFromAbsoluteUrl(modelClass, url);
 	} catch (ResourceDoesNotExistException | URISyntaxException
 		| IOException e) {
 	    throw new NotificationDaoException("Error getting resource from "
