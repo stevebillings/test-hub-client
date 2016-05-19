@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import com.blackducksoftware.integration.hub.meta.MetaInformation;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.model.Item;
-import com.blackducksoftware.tools.testhubclient.model.Meta;
 import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
@@ -64,8 +64,8 @@ public class MockNotificationDao implements NotificationDao {
 	    List<NotificationItem> notificationItems = new ArrayList<>();
 	    NotificationItem notif = new NotificationItem();
 	    notif.setType(NotificationType.VULNERABILITY);
-	    Meta meta = new Meta();
-	    meta.setHref(TEST_ITEM_URL);
+	    MetaInformation meta = new MetaInformation(null, TEST_ITEM_URL,
+		    null);
 	    notif.setMeta(meta);
 	    notificationItems.add(notif);
 	    notifResponse.setItems(notificationItems);
