@@ -11,11 +11,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.restlet.Response;
-import org.restlet.data.Cookie;
 import org.restlet.data.Method;
 import org.restlet.data.Reference;
 import org.restlet.resource.ClientResource;
-import org.restlet.util.Series;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
@@ -195,26 +193,6 @@ public class HubNotificationDao implements NotificationDao {
 	    }
 	}
 	return sb.toString();
-    }
-
-    private ClientResource getGetClientResourceWithGivenLink(
-	    Series<Cookie> cookies, String givenLink)
-	    throws NotificationDaoException {
-	final ClientResource resource = getClientResourceWithGivenLink(cookies,
-		givenLink);
-
-	resource.handle();
-	return resource;
-    }
-
-    private ClientResource getClientResourceWithGivenLink(
-	    Series<Cookie> cookies, String givenLink)
-	    throws NotificationDaoException {
-
-	Reference queryRef = new Reference(givenLink);
-	reUsableResource.setReference(queryRef);
-
-	return reUsableResource;
     }
 
     @Override
