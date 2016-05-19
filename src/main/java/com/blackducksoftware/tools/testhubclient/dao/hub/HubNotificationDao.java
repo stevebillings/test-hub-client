@@ -72,25 +72,16 @@ public class HubNotificationDao implements NotificationDao {
 	    Set<AbstractMap.SimpleEntry<String, String>> queryParameters)
 	    throws NotificationDaoException {
 
-	final ClientResource resource = getClientResourceForGet(urlSegments,
-		queryParameters);
-	log.info("Resource: " + resource);
-	int responseCode = resource.getResponse().getStatus().getCode();
-
-	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
-	    final String response = readResponseAsString(resource.getResponse());
-
-	    Gson gson = new GsonBuilder().setDateFormat(dateFormat).create();
-	    JsonParser parser = new JsonParser();
-	    JsonObject json = parser.parse(response).getAsJsonObject();
-	    T modelObject = gson.fromJson(json, modelClass);
-
-	    return modelObject;
-	} else {
+	try {
+	    return hub.getFromRelativeUrl(modelClass, urlSegments,
+		    queryParameters, dateFormat);
+	} catch (URISyntaxException | IOException
+		| ResourceDoesNotExistException e) {
 	    throw new NotificationDaoException(
 		    "Error getting resource from relative url segments "
 			    + urlSegments + " and query parameters "
-			    + queryParameters + "; errorCode: " + responseCode);
+			    + queryParameters + "; errorCode: "
+			    + e.getMessage());
 	}
     }
 
@@ -175,28 +166,6 @@ public class HubNotificationDao implements NotificationDao {
 	    throw new NotificationDaoException("Error getting resource from "
 		    + url + ": " + e.getMessage());
 	}
-
-	//
-	// final ClientResource resource = getGetClientResourceWithGivenLink(
-	// hub.getCookies(), url);
-	//
-	// log.debug("Resource: " + resource);
-	// int responseCode = resource.getResponse().getStatus().getCode();
-	// if (responseCode == 200 || responseCode == 204 || responseCode ==
-	// 202) {
-	// log.debug("SUCCESS getting resource from Hub");
-	// final String response = readResponseAsString(resource.getResponse());
-	//
-	// Gson gson = new GsonBuilder().setDateFormat(dateFormat).create();
-	// JsonParser parser = new JsonParser();
-	// JsonObject json = parser.parse(response).getAsJsonObject();
-	//
-	// T modelObject = gson.fromJson(json, modelClass);
-	// return modelObject;
-	// } else {
-	// throw new NotificationDaoException("Error getting resource from "
-	// + url + ": " + responseCode);
-	// }
     }
 
     private String readResponseAsString(final Response response)
