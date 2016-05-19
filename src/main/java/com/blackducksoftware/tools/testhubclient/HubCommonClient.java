@@ -34,6 +34,7 @@ public class HubCommonClient {
     public static void main(String[] args) throws Exception {
 
 	System.out.println("Starting up...");
+	System.out.println((new Date()).toString());
 
 	String username = "sysadmin";
 	String password = "blackduck";
@@ -44,7 +45,8 @@ public class HubCommonClient {
 	NotificationService svc = new NotificationServiceImpl(dao);
 	HubCommonClient client = new HubCommonClient(svc);
 
-	client.run("2016-05-01T00:00:00.000Z", "2016-07-30T00:00:00.000Z", 10);
+	client.run("2016-05-01T00:00:00.000Z", "2016-05-11T00:00:00.000Z", 1000);
+	System.out.println((new Date()).toString());
     }
 
     private final ClientLogger log;
