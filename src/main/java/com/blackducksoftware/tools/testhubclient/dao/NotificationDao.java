@@ -1,10 +1,10 @@
 package com.blackducksoftware.tools.testhubclient.dao;
 
+import java.util.AbstractMap;
 import java.util.List;
 import java.util.Set;
 
 import com.blackducksoftware.tools.testhubclient.model.Item;
-import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 
 /**
  * Gets Notifications and data they point to.
@@ -33,7 +33,8 @@ public interface NotificationDao {
      * @throws NotificationDaoException
      */
     <T> T getFromRelativeUrl(Class<T> modelClass, List<String> urlSegments,
-	    Set<NameValuePair> queryParameters) throws NotificationDaoException;
+	    Set<AbstractMap.SimpleEntry<String, String>> queryParameters)
+	    throws NotificationDaoException;
 
     /**
      * Get a resource consisting of a list of items (that will be cached) from
@@ -54,7 +55,8 @@ public interface NotificationDao {
      * @throws NotificationDaoException
      */
     <T> T getAndCacheItemsFromRelativeUrl(Class<T> modelClass,
-	    List<String> urlSegments, Set<NameValuePair> queryParameters)
+	    List<String> urlSegments,
+	    Set<AbstractMap.SimpleEntry<String, String>> queryParameters)
 	    throws NotificationDaoException;
 
     /**

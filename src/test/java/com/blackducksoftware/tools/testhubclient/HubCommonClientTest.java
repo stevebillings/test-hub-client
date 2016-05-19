@@ -3,6 +3,7 @@ package com.blackducksoftware.tools.testhubclient;
 import static org.junit.Assert.assertEquals;
 
 import java.net.URISyntaxException;
+import java.util.AbstractMap;
 import java.util.List;
 import java.util.Set;
 
@@ -16,7 +17,6 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.dao.hub.HubNotificationDao;
-import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.service.NotificationService;
 import com.blackducksoftware.tools.testhubclient.service.impl.NotificationServiceImpl;
 
@@ -52,7 +52,8 @@ public class HubCommonClientTest {
     }
 
     private ClientResource createClientResourceForGet(List<String> urlSegments,
-	    Set<NameValuePair> queryParameters) throws NotificationDaoException {
+	    Set<AbstractMap.SimpleEntry<String, String>> queryParameters)
+	    throws NotificationDaoException {
 	ClientResource resource;
 	try {
 	    resource = hub.createClientResource();
@@ -62,8 +63,8 @@ public class HubCommonClientTest {
 	for (String urlSegment : urlSegments) {
 	    resource.addSegment(urlSegment);
 	}
-	for (NameValuePair queryParameter : queryParameters) {
-	    resource.addQueryParameter(queryParameter.getName(),
+	for (AbstractMap.SimpleEntry<String, String> queryParameter : queryParameters) {
+	    resource.addQueryParameter(queryParameter.getKey(),
 		    queryParameter.getValue());
 	}
 

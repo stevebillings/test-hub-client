@@ -1,5 +1,6 @@
 package com.blackducksoftware.tools.testhubclient.dao.mock;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -8,7 +9,6 @@ import com.blackducksoftware.integration.hub.meta.MetaInformation;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.model.Item;
-import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationType;
@@ -56,7 +56,8 @@ public class MockNotificationDao implements NotificationDao {
 
     @Override
     public <T> T getFromRelativeUrl(Class<T> modelClass,
-	    List<String> urlSegments, Set<NameValuePair> queryParameters)
+	    List<String> urlSegments,
+	    Set<AbstractMap.SimpleEntry<String, String>> queryParameters)
 	    throws NotificationDaoException {
 
 	if (modelClass == NotificationResponse.class) {
@@ -91,7 +92,8 @@ public class MockNotificationDao implements NotificationDao {
 
     @Override
     public <T> T getAndCacheItemsFromRelativeUrl(Class<T> modelClass,
-	    List<String> urlSegments, Set<NameValuePair> queryParameters)
+	    List<String> urlSegments,
+	    Set<AbstractMap.SimpleEntry<String, String>> queryParameters)
 	    throws NotificationDaoException {
 
 	return getFromRelativeUrl(modelClass, urlSegments, queryParameters);

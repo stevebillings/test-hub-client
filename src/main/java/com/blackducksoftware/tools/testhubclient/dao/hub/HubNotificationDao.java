@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.URISyntaxException;
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +25,6 @@ import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
 import com.blackducksoftware.tools.testhubclient.model.Item;
-import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -67,7 +67,8 @@ public class HubNotificationDao implements NotificationDao {
 
     @Override
     public <T> T getFromRelativeUrl(Class<T> modelClass,
-	    List<String> urlSegments, Set<NameValuePair> queryParameters)
+	    List<String> urlSegments,
+	    Set<AbstractMap.SimpleEntry<String, String>> queryParameters)
 	    throws NotificationDaoException {
 
 	final ClientResource resource = getClientResourceForGet(urlSegments,
@@ -94,7 +95,8 @@ public class HubNotificationDao implements NotificationDao {
 
     @Override
     public <T> T getAndCacheItemsFromRelativeUrl(Class<T> modelClass,
-	    List<String> urlSegments, Set<NameValuePair> queryParameters)
+	    List<String> urlSegments,
+	    Set<AbstractMap.SimpleEntry<String, String>> queryParameters)
 	    throws NotificationDaoException {
 
 	final ClientResource resource = getClientResourceForGet(urlSegments,
@@ -143,14 +145,15 @@ public class HubNotificationDao implements NotificationDao {
     }
 
     private ClientResource getClientResourceForGet(List<String> urlSegments,
-	    Set<NameValuePair> queryParameters) throws NotificationDaoException {
+	    Set<AbstractMap.SimpleEntry<String, String>> queryParameters)
+	    throws NotificationDaoException {
 
 	Reference queryRef = new Reference(hubUrl);
 	for (String urlSegment : urlSegments) {
 	    queryRef.addSegment(urlSegment);
 	}
-	for (NameValuePair queryParameter : queryParameters) {
-	    queryRef.addQueryParameter(queryParameter.getName(),
+	for (AbstractMap.SimpleEntry<String, String> queryParameter : queryParameters) {
+	    queryRef.addQueryParameter(queryParameter.getKey(),
 		    queryParameter.getValue());
 	}
 	reUsableResource.setReference(queryRef);

@@ -3,6 +3,7 @@ package com.blackducksoftware.tools.testhubclient.dao.hub;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -14,7 +15,6 @@ import org.junit.Test;
 
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
-import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationType;
@@ -85,12 +85,13 @@ public class HubNotificationDaoTest {
 	urlSegments.add("api");
 	urlSegments.add("notifications");
 
-	Set<NameValuePair> queryParameters = new HashSet<>();
-	queryParameters.add(new NameValuePair("startDate",
-		"2016-05-01T00:00:00.000Z"));
-	queryParameters.add(new NameValuePair("endDate",
-		"2016-05-02T00:00:00.000Z"));
-	queryParameters.add(new NameValuePair("limit", "1"));
+	Set<AbstractMap.SimpleEntry<String, String>> queryParameters = new HashSet<>();
+	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
+		"startDate", "2016-05-01T00:00:00.000Z"));
+	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
+		"endDate", "2016-05-02T00:00:00.000Z"));
+	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
+		"limit", "1"));
 	NotificationResponse notifResponse = hub.getFromRelativeUrl(
 		NotificationResponse.class, urlSegments, queryParameters);
 	List<NotificationItem> notifs = notifResponse.getItems();
@@ -105,12 +106,13 @@ public class HubNotificationDaoTest {
 	urlSegments.add("api");
 	urlSegments.add("notifications");
 
-	Set<NameValuePair> queryParameters = new HashSet<>();
-	queryParameters.add(new NameValuePair("startDate",
-		"2016-05-01T00:00:00.000Z"));
-	queryParameters.add(new NameValuePair("endDate",
-		"2016-05-05T00:00:00.000Z"));
-	queryParameters.add(new NameValuePair("limit", "100"));
+	Set<AbstractMap.SimpleEntry<String, String>> queryParameters = new HashSet<>();
+	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
+		"startDate", "2016-05-01T00:00:00.000Z"));
+	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
+		"endDate", "2016-05-05T00:00:00.000Z"));
+	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
+		"limit", "100"));
 	NotificationResponse notifResponse = hub
 		.getAndCacheItemsFromRelativeUrl(NotificationResponse.class,
 			urlSegments, queryParameters);

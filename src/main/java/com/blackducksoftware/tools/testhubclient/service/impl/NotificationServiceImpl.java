@@ -1,5 +1,6 @@
 package com.blackducksoftware.tools.testhubclient.service.impl;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -8,7 +9,6 @@ import java.util.Set;
 import com.blackducksoftware.tools.testhubclient.ClientLogger;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
-import com.blackducksoftware.tools.testhubclient.model.NameValuePair;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationType;
@@ -95,10 +95,13 @@ public class NotificationServiceImpl implements NotificationService {
 	urlSegments.add("api");
 	urlSegments.add("notifications");
 
-	Set<NameValuePair> queryParameters = new HashSet<>();
-	queryParameters.add(new NameValuePair("startDate", startDate));
-	queryParameters.add(new NameValuePair("endDate", endDate));
-	queryParameters.add(new NameValuePair("limit", String.valueOf(limit)));
+	Set<AbstractMap.SimpleEntry<String, String>> queryParameters = new HashSet<>();
+	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
+		"startDate", startDate));
+	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
+		"endDate", endDate));
+	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
+		"limit", String.valueOf(limit)));
 
 	try {
 	    notifResponse = dao.getAndCacheItemsFromRelativeUrl(
