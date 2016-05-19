@@ -20,6 +20,7 @@ import org.restlet.util.Series;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
+import com.blackducksoftware.integration.hub.exception.ResourceDoesNotExistException;
 import com.blackducksoftware.tools.testhubclient.ClientLogger;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
@@ -164,30 +165,38 @@ public class HubNotificationDao implements NotificationDao {
 
     public <T> T getFromAbsoluteUrl(Class<T> modelClass, String url)
 	    throws NotificationDaoException {
-
 	if (url == null) {
 	    return null;
 	}
-
-	final ClientResource resource = getGetClientResourceWithGivenLink(
-		hub.getCookies(), url);
-
-	log.debug("Resource: " + resource);
-	int responseCode = resource.getResponse().getStatus().getCode();
-	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
-	    log.debug("SUCCESS getting resource from Hub");
-	    final String response = readResponseAsString(resource.getResponse());
-
-	    Gson gson = new GsonBuilder().setDateFormat(dateFormat).create();
-	    JsonParser parser = new JsonParser();
-	    JsonObject json = parser.parse(response).getAsJsonObject();
-
-	    T modelObject = gson.fromJson(json, modelClass);
-	    return modelObject;
-	} else {
+	try {
+	    return hub.getFromAbsoluteUrl(modelClass, url, dateFormat);
+	} catch (ResourceDoesNotExistException | URISyntaxException
+		| IOException e) {
 	    throw new NotificationDaoException("Error getting resource from "
-		    + url + ": " + responseCode);
+		    + url + ": " + e.getMessage());
 	}
+
+	//
+	// final ClientResource resource = getGetClientResourceWithGivenLink(
+	// hub.getCookies(), url);
+	//
+	// log.debug("Resource: " + resource);
+	// int responseCode = resource.getResponse().getStatus().getCode();
+	// if (responseCode == 200 || responseCode == 204 || responseCode ==
+	// 202) {
+	// log.debug("SUCCESS getting resource from Hub");
+	// final String response = readResponseAsString(resource.getResponse());
+	//
+	// Gson gson = new GsonBuilder().setDateFormat(dateFormat).create();
+	// JsonParser parser = new JsonParser();
+	// JsonObject json = parser.parse(response).getAsJsonObject();
+	//
+	// T modelObject = gson.fromJson(json, modelClass);
+	// return modelObject;
+	// } else {
+	// throw new NotificationDaoException("Error getting resource from "
+	// + url + ": " + responseCode);
+	// }
     }
 
     private String readResponseAsString(final Response response)
