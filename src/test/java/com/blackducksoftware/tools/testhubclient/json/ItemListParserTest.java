@@ -24,6 +24,7 @@ import com.blackducksoftware.tools.testhubclient.model.notification.Notification
 import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
+import com.google.gson.reflect.TypeToken;
 
 public class ItemListParserTest {
 
@@ -38,6 +39,10 @@ public class ItemListParserTest {
     @Test
     public void test() throws URISyntaxException, HubIntegrationException,
 	    BDRestException, IOException, ResourceDoesNotExistException {
+
+	TypeToken<NotificationItem> typeToken = new TypeToken<NotificationItem>() {
+	};
+
 	HubIntRestService restService = new HubIntRestService(
 		"http://eng-hub-valid03.dc1.lan");
 	restService.setCookies("sysadmin", "blackduck");
@@ -50,8 +55,9 @@ public class ItemListParserTest {
 	typeToSubclassMap.put("POLICY_OVERRIDE",
 		PolicyOverrideNotificationItem.class);
 
-	ItemListParser<NotificationItem> parser = new ItemListParser<NotificationItem>(
-		NotificationItem.class, restService, typeToSubclassMap);
+	HubItemListParser<NotificationItem> parser = new HubItemListParser<NotificationItem>(
+		restService, NotificationItem.class, typeToken,
+		typeToSubclassMap);
 
 	List<String> urlSegments = new ArrayList<>();
 	urlSegments.add("api");

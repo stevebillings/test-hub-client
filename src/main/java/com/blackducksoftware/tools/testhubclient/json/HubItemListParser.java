@@ -14,7 +14,6 @@ import org.restlet.resource.ClientResource;
 import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.ResourceDoesNotExistException;
 import com.blackducksoftware.integration.hub.util.RestletUtil;
-import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.HubItemList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -24,18 +23,18 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
-public class ItemListParser<T> {
+public class HubItemListParser<T> {
     private Gson gson;
     private HubIntRestService hub;
-    private final TypeToken<NotificationItem> requestListTypeToken;
+    private final TypeToken<T> requestListTypeToken;
 
-    public ItemListParser(Class<T> baseType, HubIntRestService hub,
+    public HubItemListParser(HubIntRestService hub, Class<T> baseType,
+	    TypeToken<T> requestListTypeToken,
 	    Map<String, Class<? extends T>> typeToSubclassMap) {
 
 	this.hub = hub;
 	GsonBuilder gsonBuilder = new GsonBuilder();
-	requestListTypeToken = new TypeToken<NotificationItem>() {
-	};
+	this.requestListTypeToken = requestListTypeToken;
 	RuntimeTypeAdapterFactory<T> pojoAdapter = (RuntimeTypeAdapterFactory<T>) RuntimeTypeAdapterFactory
 		.of(baseType, "type");
 
@@ -64,14 +63,14 @@ public class ItemListParser<T> {
 	int responseCode = RestletUtil.getResponseStatusCode(resource);
 
 	if (RestletUtil.isSuccess(responseCode)) {
-	    final String responseString = RestletUtil.readResponseAsString(resource
+	    final String response = RestletUtil.readResponseAsString(resource
 		    .getResponse());
 
 	    JsonParser parser = new JsonParser();
-	    JsonObject json = parser.parse(responseString).getAsJsonObject();
-	    HubItemList response = gson.fromJson(json,
+	    JsonObject json = parser.parse(response).getAsJsonObject();
+	    HubItemList notificationResponse = gson.fromJson(json,
 		    HubItemList.class);
-	    System.out.println(response);
+	    System.out.println(notificationResponse);
 	    JsonArray array = json.get("items").getAsJsonArray();
 	    for (JsonElement elem : array) {
 		T genericItem = gson.fromJson(elem,
