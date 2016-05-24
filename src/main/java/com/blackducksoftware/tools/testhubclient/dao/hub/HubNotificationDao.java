@@ -19,6 +19,7 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ResourceDoesNotExistException;
+import com.blackducksoftware.integration.hub.rest.RestConnection;
 import com.blackducksoftware.tools.testhubclient.ClientLogger;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
@@ -40,6 +41,7 @@ import com.google.gson.JsonParser;
 public class HubNotificationDao implements NotificationDao {
     private String dateFormat;
     private ClientLogger log = new ClientLogger();
+    private RestConnection restConnection;
     private HubIntRestService hub;
     private String hubUrl;
     private Map<String, JsonElement> itemJsonCache; // URL -> Json Element cache
@@ -50,14 +52,17 @@ public class HubNotificationDao implements NotificationDao {
 	    String dateFormat) throws HubIntegrationException,
 	    URISyntaxException, BDRestException, NotificationDaoException {
 	this.hubUrl = hubUrl;
-	hub = new HubIntRestService(hubUrl);
-	hub.setCookies(username, password);
+
+	restConnection = new RestConnection(hubUrl);
+	restConnection.setCookies(username, password);
+
+	hub = new HubIntRestService(restConnection);
 	itemJsonCache = new HashMap<>();
 	jsonModelParser = new JsonModelParser(dateFormat);
 	this.dateFormat = dateFormat;
 
 	try {
-	    reUsableResource = hub.createClientResource();
+	    reUsableResource = restConnection.createClientResource();
 	} catch (URISyntaxException e) {
 	    throw new NotificationDaoException(e.getMessage());
 	}
@@ -71,7 +76,7 @@ public class HubNotificationDao implements NotificationDao {
 	    throws NotificationDaoException {
 
 	try {
-	    return hub.getFromRelativeUrl(modelClass, urlSegments,
+	    return restConnection.getFromRelativeUrl(modelClass, urlSegments,
 		    queryParameters);
 	} catch (URISyntaxException | IOException
 		| ResourceDoesNotExistException e) {
@@ -158,7 +163,7 @@ public class HubNotificationDao implements NotificationDao {
 	    return null;
 	}
 	try {
-	    return hub.getFromAbsoluteUrl(modelClass, url);
+	    return restConnection.getFromAbsoluteUrl(modelClass, url);
 	} catch (ResourceDoesNotExistException | URISyntaxException
 		| IOException e) {
 	    throw new NotificationDaoException("Error getting resource from "
