@@ -26,29 +26,25 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
-public class ItemListParser {
+public class ItemListParser<T> {
     private Gson gson;
     private HubIntRestService hub;
     private final TypeToken<NotificationItem> requestListTypeToken;
 
-    public <T1, T2 extends T1> ItemListParser(HubIntRestService hub,
-	    Class<T1> itemParentClass, Map<String, Class<T2>> typeToSubclassMap) {
+    public ItemListParser(Class<?> baseType, HubIntRestService hub,
+	    Map<String, Class<? extends T>> typeToSubclassMap) {
 
 	this.hub = hub;
 	GsonBuilder gsonBuilder = new GsonBuilder();
 	requestListTypeToken = new TypeToken<NotificationItem>() {
 	};
-	RuntimeTypeAdapterFactory<NotificationItem> pojoAdapter = (RuntimeTypeAdapterFactory<NotificationItem>) RuntimeTypeAdapterFactory
-		.of(itemParentClass, "type")
-		.registerSubtype(
-			(Class<? extends T1>) VulnerabilityNotificationItem.class,
-			"VULNERABILITY")
-		.registerSubtype(
-			(Class<? extends T1>) RuleViolationNotificationItem.class,
-			"RULE_VIOLATION")
-		.registerSubtype(
-			(Class<? extends T1>) PolicyOverrideNotificationItem.class,
-			"POLICY_OVERRIDE");
+	RuntimeTypeAdapterFactory<T> pojoAdapter = (RuntimeTypeAdapterFactory<T>) RuntimeTypeAdapterFactory
+		.of(baseType, "type");
+
+	for (String typeName : typeToSubclassMap.keySet()) {
+	    pojoAdapter.registerSubtype(typeToSubclassMap.get(typeName),
+		    typeName);
+	}
 
 	gsonBuilder.registerTypeAdapterFactory(pojoAdapter);
 	gson = gsonBuilder.setDateFormat(RestletUtil.JSON_DATE_FORMAT).create();

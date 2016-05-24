@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.AfterClass;
@@ -17,6 +19,9 @@ import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ResourceDoesNotExistException;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
+import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
+import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
+import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
 
 public class ItemListParserTest {
 
@@ -34,8 +39,17 @@ public class ItemListParserTest {
 	HubIntRestService restService = new HubIntRestService(
 		"http://eng-hub-valid03.dc1.lan");
 	restService.setCookies("sysadmin", "blackduck");
-	ItemListParser parser = new ItemListParser(restService,
-		NotificationItem.class, null);
+
+	Map<String, Class<? extends NotificationItem>> typeToSubclassMap = new HashMap<>();
+	typeToSubclassMap.put("VULNERABILITY",
+		VulnerabilityNotificationItem.class);
+	typeToSubclassMap.put("RULE_VIOLATION",
+		RuleViolationNotificationItem.class);
+	typeToSubclassMap.put("POLICY_OVERRIDE",
+		PolicyOverrideNotificationItem.class);
+
+	ItemListParser<NotificationItem> parser = new ItemListParser<NotificationItem>(
+		NotificationItem.class, restService, typeToSubclassMap);
 
 	List<String> urlSegments = new ArrayList<>();
 	urlSegments.add("api");
