@@ -10,7 +10,7 @@ import com.blackducksoftware.tools.testhubclient.ClientLogger;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
-import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
+import com.blackducksoftware.tools.testhubclient.model.notification.HubItemList;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationType;
 import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
@@ -31,7 +31,7 @@ public class NotificationServiceImpl implements NotificationService {
     public List<NotificationItem> getNotifications(String startDate,
 	    String endDate, int limit) throws NotificationServiceException {
 
-	NotificationResponse notifResponse = getNotificationResponse(startDate,
+	HubItemList notifResponse = getNotificationResponse(startDate,
 		endDate, limit);
 
 	List<NotificationItem> notificationItems = new ArrayList<>(
@@ -88,9 +88,9 @@ public class NotificationServiceImpl implements NotificationService {
 	return notificationItems;
     }
 
-    private NotificationResponse getNotificationResponse(String startDate,
+    private HubItemList getNotificationResponse(String startDate,
 	    String endDate, int limit) throws NotificationServiceException {
-	NotificationResponse notifResponse;
+	HubItemList notifResponse;
 	List<String> urlSegments = new ArrayList<>();
 	urlSegments.add("api");
 	urlSegments.add("notifications");
@@ -105,7 +105,7 @@ public class NotificationServiceImpl implements NotificationService {
 
 	try {
 	    notifResponse = dao.getAndCacheItemsFromRelativeUrl(
-		    NotificationResponse.class, urlSegments, queryParameters);
+		    HubItemList.class, urlSegments, queryParameters);
 	} catch (NotificationDaoException e) {
 	    throw new NotificationServiceException(e);
 	}

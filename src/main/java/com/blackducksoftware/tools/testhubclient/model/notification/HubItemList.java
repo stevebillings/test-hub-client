@@ -2,7 +2,7 @@ package com.blackducksoftware.tools.testhubclient.model.notification;
 
 import java.util.List;
 
-public class NotificationResponse {
+public class HubItemList {
     private int totalCount;
     private List<NotificationItem> items;
 

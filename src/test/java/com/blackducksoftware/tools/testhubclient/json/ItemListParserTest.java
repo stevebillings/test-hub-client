@@ -1,5 +1,7 @@
 package com.blackducksoftware.tools.testhubclient.json;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.AbstractMap;
@@ -63,7 +65,33 @@ public class ItemListParserTest {
 	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
 		"limit", "100"));
 
-	parser.parseNotificationItemList(urlSegments, queryParameters);
+	List<NotificationItem> items = parser.parseNotificationItemList(
+		urlSegments, queryParameters);
+
+	int vulnerabilityCount = 0;
+	int ruleViolationCount = 0;
+	int policyOverrideCount = 0;
+
+	for (NotificationItem genericItem : items) {
+	    if (genericItem instanceof VulnerabilityNotificationItem) {
+		VulnerabilityNotificationItem specificItem = (VulnerabilityNotificationItem) genericItem;
+		System.out.println(specificItem);
+		vulnerabilityCount++;
+	    } else if (genericItem instanceof RuleViolationNotificationItem) {
+		RuleViolationNotificationItem specificItem = (RuleViolationNotificationItem) genericItem;
+		System.out.println(specificItem);
+		ruleViolationCount++;
+	    } else if (genericItem instanceof PolicyOverrideNotificationItem) {
+		PolicyOverrideNotificationItem specificItem = (PolicyOverrideNotificationItem) genericItem;
+		System.out.println(specificItem);
+		policyOverrideCount++;
+	    } else {
+		System.out.println("Don't recognize this type: " + genericItem);
+	    }
+	}
+	assertEquals(0, policyOverrideCount);
+	assertEquals(70, ruleViolationCount);
+	assertEquals(30, vulnerabilityCount);
     }
 
 }

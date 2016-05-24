@@ -3,6 +3,7 @@ package com.blackducksoftware.tools.testhubclient.json;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,10 +15,7 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.ResourceDoesNotExistException;
 import com.blackducksoftware.integration.hub.util.RestletUtil;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
-import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
-import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
-import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
-import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
+import com.blackducksoftware.tools.testhubclient.model.notification.HubItemList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -31,7 +29,7 @@ public class ItemListParser<T> {
     private HubIntRestService hub;
     private final TypeToken<NotificationItem> requestListTypeToken;
 
-    public ItemListParser(Class<?> baseType, HubIntRestService hub,
+    public ItemListParser(Class<T> baseType, HubIntRestService hub,
 	    Map<String, Class<? extends T>> typeToSubclassMap) {
 
 	this.hub = hub;
@@ -50,10 +48,12 @@ public class ItemListParser<T> {
 	gson = gsonBuilder.setDateFormat(RestletUtil.JSON_DATE_FORMAT).create();
     }
 
-    public void parseNotificationItemList(List<String> urlSegments,
+    public List<T> parseNotificationItemList(List<String> urlSegments,
 	    Set<AbstractMap.SimpleEntry<String, String>> queryParameters)
 	    throws IOException, URISyntaxException,
 	    ResourceDoesNotExistException {
+
+	List<T> items = new ArrayList<>();
 
 	// TODO: Change to use non reusable resource approach
 	Reference queryRef = RestletUtil.createReference(hub.getBaseUrl(),
@@ -64,29 +64,20 @@ public class ItemListParser<T> {
 	int responseCode = RestletUtil.getResponseStatusCode(resource);
 
 	if (RestletUtil.isSuccess(responseCode)) {
-	    final String response = RestletUtil.readResponseAsString(resource
+	    final String responseString = RestletUtil.readResponseAsString(resource
 		    .getResponse());
 
 	    JsonParser parser = new JsonParser();
-	    JsonObject json = parser.parse(response).getAsJsonObject();
-	    NotificationResponse notificationResponse = gson.fromJson(json,
-		    NotificationResponse.class);
-	    System.out.println(notificationResponse);
+	    JsonObject json = parser.parse(responseString).getAsJsonObject();
+	    HubItemList response = gson.fromJson(json,
+		    HubItemList.class);
+	    System.out.println(response);
 	    JsonArray array = json.get("items").getAsJsonArray();
 	    for (JsonElement elem : array) {
-		NotificationItem genericItem = gson.fromJson(elem,
+		T genericItem = gson.fromJson(elem,
 			requestListTypeToken.getType());
 
-		if (genericItem instanceof VulnerabilityNotificationItem) {
-		    VulnerabilityNotificationItem specificItem = (VulnerabilityNotificationItem) genericItem;
-		    System.out.println(specificItem);
-		} else if (genericItem instanceof RuleViolationNotificationItem) {
-		    RuleViolationNotificationItem specificItem = (RuleViolationNotificationItem) genericItem;
-		    System.out.println(specificItem);
-		} else if (genericItem instanceof PolicyOverrideNotificationItem) {
-		    PolicyOverrideNotificationItem specificItem = (PolicyOverrideNotificationItem) genericItem;
-		    System.out.println(specificItem);
-		}
+		items.add(genericItem);
 
 	    }
 	} else {
@@ -96,6 +87,7 @@ public class ItemListParser<T> {
 			    + queryParameters + "; errorCode: " + responseCode
 			    + "; " + resource, resource);
 	}
+	return items;
     }
 
 }

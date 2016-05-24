@@ -16,7 +16,7 @@ import org.junit.Test;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
-import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
+import com.blackducksoftware.tools.testhubclient.model.notification.HubItemList;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationType;
 import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
@@ -92,8 +92,8 @@ public class HubNotificationDaoTest {
 		"endDate", "2016-05-02T00:00:00.000Z"));
 	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
 		"limit", "1"));
-	NotificationResponse notifResponse = hub.getFromRelativeUrl(
-		NotificationResponse.class, urlSegments, queryParameters);
+	HubItemList notifResponse = hub.getFromRelativeUrl(
+		HubItemList.class, urlSegments, queryParameters);
 	List<NotificationItem> notifs = notifResponse.getItems();
 	for (NotificationItem notif : notifs) {
 	    System.out.println(notif);
@@ -113,8 +113,8 @@ public class HubNotificationDaoTest {
 		"endDate", "2016-05-05T00:00:00.000Z"));
 	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
 		"limit", "100"));
-	NotificationResponse notifResponse = hub
-		.getAndCacheItemsFromRelativeUrl(NotificationResponse.class,
+	HubItemList notifResponse = hub
+		.getAndCacheItemsFromRelativeUrl(HubItemList.class,
 			urlSegments, queryParameters);
 
 	for (NotificationItem genericNotif : notifResponse.getItems()) {

@@ -10,7 +10,7 @@ import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.model.Item;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
-import com.blackducksoftware.tools.testhubclient.model.notification.NotificationResponse;
+import com.blackducksoftware.tools.testhubclient.model.notification.HubItemList;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationType;
 import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
@@ -60,8 +60,8 @@ public class MockNotificationDao implements NotificationDao {
 	    Set<AbstractMap.SimpleEntry<String, String>> queryParameters)
 	    throws NotificationDaoException {
 
-	if (modelClass == NotificationResponse.class) {
-	    NotificationResponse notifResponse = new NotificationResponse();
+	if (modelClass == HubItemList.class) {
+	    HubItemList notifResponse = new HubItemList();
 	    List<NotificationItem> notificationItems = new ArrayList<>();
 	    NotificationItem notif = new NotificationItem();
 	    notif.setType(NotificationType.VULNERABILITY);
