@@ -1,17 +1,16 @@
 package com.blackducksoftware.tools.testhubclient.model.notification;
 
 public class RuleViolationNotificationItem extends NotificationItem {
-    public RuleViolationNotificationContent content;
+	public RuleViolationNotificationContent content;
 
-    public RuleViolationNotificationContent getContent() {
-	return content;
-    }
+	public RuleViolationNotificationContent getContent() {
+		return content;
+	}
 
-    @Override
-    public String toString() {
-	return "RuleViolationNotificationItem [content=" + content
-		+ ", contentType=" + contentType + ", type=" + type
-		+ ", createdAt=" + createdAt + ", Meta=" + getMeta() + "]";
-    }
+	@Override
+	public String toString() {
+		return "RuleViolationNotificationItem [content=" + content + ", contentType=" + contentType + ", type=" + type
+				+ ", createdAt=" + createdAt + ", Meta=" + getMeta() + "]";
+	}
 
 }

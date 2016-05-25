@@ -21,56 +21,51 @@ import com.blackducksoftware.tools.testhubclient.service.NotificationService;
 import com.blackducksoftware.tools.testhubclient.service.impl.NotificationServiceImpl;
 
 public class HubCommonClientTest {
-    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-    private HubIntRestService hub; // TODO temp
+	private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+	private HubIntRestService hub; // TODO temp
 
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-    }
-
-    @AfterClass
-    public static void tearDownAfterClass() throws Exception {
-    }
-
-    @Test
-    public void test() throws Exception {
-
-	String username = "sysadmin";
-	String password = "blackduck";
-
-	NotificationDao dao = new HubNotificationDao(
-		"http://eng-hub-valid03.dc1.lan", username, password,
-		DATE_FORMAT);
-	NotificationService svc = new NotificationServiceImpl(dao);
-
-	HubCommonClient client = new HubCommonClient(svc);
-	Statistics stats = client.run("2016-05-01T00:00:00.000Z",
-		"2016-05-11T00:00:00.000Z", 1000);
-	assertEquals(711, stats.getNotificationCount());
-	assertEquals(554, stats.getTicketCount());
-	assertEquals(431, stats.getDuplicateCount());
-    }
-
-    private ClientResource createClientResourceForGet(List<String> urlSegments,
-	    Set<AbstractMap.SimpleEntry<String, String>> queryParameters)
-	    throws NotificationDaoException {
-	ClientResource resource;
-	try {
-	    resource = hub.createClientResource();
-	} catch (URISyntaxException e) {
-	    throw new NotificationDaoException(e.getMessage());
-	}
-	for (String urlSegment : urlSegments) {
-	    resource.addSegment(urlSegment);
-	}
-	for (AbstractMap.SimpleEntry<String, String> queryParameter : queryParameters) {
-	    resource.addQueryParameter(queryParameter.getKey(),
-		    queryParameter.getValue());
+	@BeforeClass
+	public static void setUpBeforeClass() throws Exception {
 	}
 
-	resource.setMethod(Method.GET);
-	resource.handle();
-	return resource;
-    }
+	@AfterClass
+	public static void tearDownAfterClass() throws Exception {
+	}
+
+	@Test
+	public void test() throws Exception {
+
+		String username = "sysadmin";
+		String password = "blackduck";
+
+		NotificationDao dao = new HubNotificationDao("http://eng-hub-valid03.dc1.lan", username, password, DATE_FORMAT);
+		NotificationService svc = new NotificationServiceImpl(dao);
+
+		HubCommonClient client = new HubCommonClient(svc);
+		Statistics stats = client.run("2016-05-01T00:00:00.000Z", "2016-05-11T00:00:00.000Z", 1000);
+		assertEquals(711, stats.getNotificationCount());
+		assertEquals(554, stats.getTicketCount());
+		assertEquals(431, stats.getDuplicateCount());
+	}
+
+	private ClientResource createClientResourceForGet(List<String> urlSegments,
+			Set<AbstractMap.SimpleEntry<String, String>> queryParameters) throws NotificationDaoException {
+		ClientResource resource;
+		try {
+			resource = hub.createClientResource();
+		} catch (URISyntaxException e) {
+			throw new NotificationDaoException(e.getMessage());
+		}
+		for (String urlSegment : urlSegments) {
+			resource.addSegment(urlSegment);
+		}
+		for (AbstractMap.SimpleEntry<String, String> queryParameter : queryParameters) {
+			resource.addQueryParameter(queryParameter.getKey(), queryParameter.getValue());
+		}
+
+		resource.setMethod(Method.GET);
+		resource.handle();
+		return resource;
+	}
 
 }

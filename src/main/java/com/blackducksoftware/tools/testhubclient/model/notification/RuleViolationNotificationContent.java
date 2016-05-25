@@ -5,42 +5,40 @@ import java.util.List;
 import com.google.gson.annotations.SerializedName;
 
 public class RuleViolationNotificationContent {
-    private String projectName;
-    private String projectVersionName;
-    private int componentVersionsInViolation;
-    private List<ComponentVersionStatus> componentVersionStatuses;
+	private String projectName;
+	private String projectVersionName;
+	private int componentVersionsInViolation;
+	private List<ComponentVersionStatus> componentVersionStatuses;
 
-    @SerializedName("projectVersion")
-    private String projectVersionLink;
+	@SerializedName("projectVersion")
+	private String projectVersionLink;
 
-    public String getProjectName() {
-	return projectName;
-    }
+	public String getProjectName() {
+		return projectName;
+	}
 
-    public String getProjectVersionName() {
-	return projectVersionName;
-    }
+	public String getProjectVersionName() {
+		return projectVersionName;
+	}
 
-    public int getComponentVersionsInViolation() {
-	return componentVersionsInViolation;
-    }
+	public int getComponentVersionsInViolation() {
+		return componentVersionsInViolation;
+	}
 
-    public List<ComponentVersionStatus> getComponentVersionStatuses() {
-	return componentVersionStatuses;
-    }
+	public List<ComponentVersionStatus> getComponentVersionStatuses() {
+		return componentVersionStatuses;
+	}
 
-    public String getProjectVersionLink() {
-	return projectVersionLink;
-    }
+	public String getProjectVersionLink() {
+		return projectVersionLink;
+	}
 
-    @Override
-    public String toString() {
-	return "RuleViolationNotificationContent [projectName=" + projectName
-		+ ", projectVersionName=" + projectVersionName
-		+ ", componentVersionsInViolation="
-		+ componentVersionsInViolation + ", componentVersionStatuses="
-		+ componentVersionStatuses + ", projectVersionLink="
-		+ projectVersionLink + "]";
-    }
+	@Override
+	public String toString() {
+		return "RuleViolationNotificationContent [projectName=" + projectName + ", projectVersionName="
+				+ projectVersionName + ", componentVersionsInViolation=" + componentVersionsInViolation
+				+ ", componentVersionStatuses=" + componentVersionStatuses + ", projectVersionLink="
+				+ projectVersionLink + "]";
+	}
 
 }

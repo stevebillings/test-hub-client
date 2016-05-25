@@ -5,21 +5,20 @@ import java.util.List;
 import com.blackducksoftware.tools.testhubclient.model.component.VulnerableComponentItem;
 
 public class VulnerableComponentsResponse {
-    private int totalCount;
-    private List<VulnerableComponentItem> items;
+	private int totalCount;
+	private List<VulnerableComponentItem> items;
 
-    public int getTotalCount() {
-	return totalCount;
-    }
+	public int getTotalCount() {
+		return totalCount;
+	}
 
-    public List<VulnerableComponentItem> getItems() {
-	return items;
-    }
+	public List<VulnerableComponentItem> getItems() {
+		return items;
+	}
 
-    @Override
-    public String toString() {
-	return "VulnerableComponentsResponse [totalCount=" + totalCount
-		+ ", items=" + items + "]";
-    }
+	@Override
+	public String toString() {
+		return "VulnerableComponentsResponse [totalCount=" + totalCount + ", items=" + items + "]";
+	}
 
 }

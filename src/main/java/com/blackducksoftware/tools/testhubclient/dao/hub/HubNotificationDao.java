@@ -41,163 +41,139 @@ import com.google.gson.reflect.TypeToken;
  *
  */
 public class HubNotificationDao implements NotificationDao {
-    private String dateFormat;
-    private ClientLogger log = new ClientLogger();
-    private RestConnection restConnection;
-    private HubIntRestService hub;
-    private String hubUrl;
-    private Map<String, JsonElement> itemJsonCache; // URL -> Json Element cache
-    private final JsonModelParser jsonModelParser;
-    private final ClientResource reUsableResource;
-    HubItemListParser<NotificationItem> hubItemListParser;
+	private String dateFormat;
+	private ClientLogger log = new ClientLogger();
+	private RestConnection restConnection;
+	private HubIntRestService hub;
+	private String hubUrl;
+	private Map<String, JsonElement> itemJsonCache; // URL -> Json Element cache
+	private final JsonModelParser jsonModelParser;
+	private final ClientResource reUsableResource;
+	HubItemListParser<NotificationItem> hubItemListParser;
 
-    public HubNotificationDao(String hubUrl, String username, String password,
-	    String dateFormat) throws HubIntegrationException,
-	    URISyntaxException, BDRestException, NotificationDaoException {
-	this.hubUrl = hubUrl;
+	public HubNotificationDao(String hubUrl, String username, String password, String dateFormat)
+			throws HubIntegrationException, URISyntaxException, BDRestException, NotificationDaoException {
+		this.hubUrl = hubUrl;
 
-	restConnection = new RestConnection(hubUrl);
-	restConnection.setCookies(username, password);
+		restConnection = new RestConnection(hubUrl);
+		restConnection.setCookies(username, password);
 
-	hub = new HubIntRestService(restConnection);
-	itemJsonCache = new HashMap<>();
-	jsonModelParser = new JsonModelParser(dateFormat);
-	this.dateFormat = dateFormat;
+		hub = new HubIntRestService(restConnection);
+		itemJsonCache = new HashMap<>();
+		jsonModelParser = new JsonModelParser(dateFormat);
+		this.dateFormat = dateFormat;
 
-	try {
-	    reUsableResource = restConnection.createClientResource();
-	} catch (URISyntaxException e) {
-	    throw new NotificationDaoException(e.getMessage());
-	}
-	reUsableResource.setMethod(Method.GET);
-
-	TypeToken<NotificationItem> typeToken = new TypeToken<NotificationItem>() {
-	};
-	Map<String, Class<? extends NotificationItem>> typeToSubclassMap = new HashMap<>();
-	typeToSubclassMap.put("VULNERABILITY",
-		VulnerabilityNotificationItem.class);
-	typeToSubclassMap.put("RULE_VIOLATION",
-		RuleViolationNotificationItem.class);
-	typeToSubclassMap.put("POLICY_OVERRIDE",
-		PolicyOverrideNotificationItem.class);
-
-	hubItemListParser = new HubItemListParser<NotificationItem>(
-		restConnection, NotificationItem.class, typeToken,
-		typeToSubclassMap);
-    }
-
-    @Override
-    public <T> T getFromRelativeUrl(Class<T> modelClass,
-	    List<String> urlSegments,
-	    Set<AbstractMap.SimpleEntry<String, String>> queryParameters)
-	    throws NotificationDaoException {
-
-	try {
-	    return restConnection.getFromRelativeUrl(modelClass, urlSegments,
-		    queryParameters);
-	} catch (URISyntaxException | IOException
-		| ResourceDoesNotExistException e) {
-	    throw new NotificationDaoException(
-		    "Error getting resource from relative url segments "
-			    + urlSegments + " and query parameters "
-			    + queryParameters + "; errorCode: "
-			    + e.getMessage());
-	}
-    }
-
-    private ClientResource getClientResourceForGet(List<String> urlSegments,
-	    Set<AbstractMap.SimpleEntry<String, String>> queryParameters)
-	    throws NotificationDaoException {
-
-	Reference queryRef = new Reference(hubUrl);
-	for (String urlSegment : urlSegments) {
-	    queryRef.addSegment(urlSegment);
-	}
-	for (AbstractMap.SimpleEntry<String, String> queryParameter : queryParameters) {
-	    queryRef.addQueryParameter(queryParameter.getKey(),
-		    queryParameter.getValue());
-	}
-	reUsableResource.setReference(queryRef);
-
-	reUsableResource.handle();
-	return reUsableResource;
-    }
-
-    public <T> T getFromAbsoluteUrl(Class<T> modelClass, String url)
-	    throws NotificationDaoException {
-	if (url == null) {
-	    return null;
-	}
-	try {
-	    return restConnection.getFromAbsoluteUrl(modelClass, url);
-	} catch (ResourceDoesNotExistException | URISyntaxException
-		| IOException e) {
-	    throw new NotificationDaoException("Error getting resource from "
-		    + url + ": " + e.getMessage());
-	}
-    }
-
-    private String readResponseAsString(final Response response)
-	    throws NotificationDaoException {
-	final StringBuilder sb = new StringBuilder();
-	Reader reader;
-	try {
-	    reader = response.getEntity().getReader();
-	} catch (IOException e1) {
-	    throw new NotificationDaoException(e1.getMessage());
-	}
-	final BufferedReader bufReader = new BufferedReader(reader);
-	try {
-	    String line;
-	    try {
-		while ((line = bufReader.readLine()) != null) {
-		    sb.append(line);
-		    sb.append("\n");
+		try {
+			reUsableResource = restConnection.createClientResource();
+		} catch (URISyntaxException e) {
+			throw new NotificationDaoException(e.getMessage());
 		}
-	    } catch (IOException e) {
-		throw new NotificationDaoException(e.getMessage());
-	    }
-	} finally {
-	    try {
-		bufReader.close();
-	    } catch (IOException e) {
-	    }
+		reUsableResource.setMethod(Method.GET);
+
+		TypeToken<NotificationItem> typeToken = new TypeToken<NotificationItem>() {
+		};
+		Map<String, Class<? extends NotificationItem>> typeToSubclassMap = new HashMap<>();
+		typeToSubclassMap.put("VULNERABILITY", VulnerabilityNotificationItem.class);
+		typeToSubclassMap.put("RULE_VIOLATION", RuleViolationNotificationItem.class);
+		typeToSubclassMap.put("POLICY_OVERRIDE", PolicyOverrideNotificationItem.class);
+
+		hubItemListParser = new HubItemListParser<NotificationItem>(restConnection, NotificationItem.class, typeToken,
+				typeToSubclassMap);
 	}
-	return sb.toString();
-    }
 
-    @Override
-    public String getVersion() throws NotificationDaoException {
-	try {
-	    return hub.getHubVersion();
-	} catch (IOException | BDRestException | URISyntaxException e) {
-	    throw new NotificationDaoException(e.getMessage());
+	@Override
+	public <T> T getFromRelativeUrl(Class<T> modelClass, List<String> urlSegments,
+			Set<AbstractMap.SimpleEntry<String, String>> queryParameters) throws NotificationDaoException {
+
+		try {
+			return restConnection.getFromRelativeUrl(modelClass, urlSegments, queryParameters);
+		} catch (URISyntaxException | IOException | ResourceDoesNotExistException e) {
+			throw new NotificationDaoException("Error getting resource from relative url segments " + urlSegments
+					+ " and query parameters " + queryParameters + "; errorCode: " + e.getMessage());
+		}
 	}
-    }
 
-    @Override
-    public List<NotificationItem> getNotifications(String startDate,
-	    String endDate, int limit) throws NotificationDaoException {
+	private ClientResource getClientResourceForGet(List<String> urlSegments,
+			Set<AbstractMap.SimpleEntry<String, String>> queryParameters) throws NotificationDaoException {
 
-	List<String> urlSegments = new ArrayList<>();
-	urlSegments.add("api");
-	urlSegments.add("notifications");
+		Reference queryRef = new Reference(hubUrl);
+		for (String urlSegment : urlSegments) {
+			queryRef.addSegment(urlSegment);
+		}
+		for (AbstractMap.SimpleEntry<String, String> queryParameter : queryParameters) {
+			queryRef.addQueryParameter(queryParameter.getKey(), queryParameter.getValue());
+		}
+		reUsableResource.setReference(queryRef);
 
-	Set<AbstractMap.SimpleEntry<String, String>> queryParameters = new HashSet<>();
-	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
-		"startDate", startDate));
-	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
-		"endDate", endDate));
-	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
-		"limit", String.valueOf(limit)));
-	try {
-	    return hubItemListParser
-		    .parseItemList(urlSegments, queryParameters);
-	} catch (IOException | URISyntaxException
-		| ResourceDoesNotExistException e) {
-	    throw new NotificationDaoException(
-		    "Error parsing NotificationItemList: " + e.getMessage(), e);
+		reUsableResource.handle();
+		return reUsableResource;
 	}
-    }
+
+	public <T> T getFromAbsoluteUrl(Class<T> modelClass, String url) throws NotificationDaoException {
+		if (url == null) {
+			return null;
+		}
+		try {
+			return restConnection.getFromAbsoluteUrl(modelClass, url);
+		} catch (ResourceDoesNotExistException | URISyntaxException | IOException e) {
+			throw new NotificationDaoException("Error getting resource from " + url + ": " + e.getMessage());
+		}
+	}
+
+	private String readResponseAsString(final Response response) throws NotificationDaoException {
+		final StringBuilder sb = new StringBuilder();
+		Reader reader;
+		try {
+			reader = response.getEntity().getReader();
+		} catch (IOException e1) {
+			throw new NotificationDaoException(e1.getMessage());
+		}
+		final BufferedReader bufReader = new BufferedReader(reader);
+		try {
+			String line;
+			try {
+				while ((line = bufReader.readLine()) != null) {
+					sb.append(line);
+					sb.append("\n");
+				}
+			} catch (IOException e) {
+				throw new NotificationDaoException(e.getMessage());
+			}
+		} finally {
+			try {
+				bufReader.close();
+			} catch (IOException e) {
+			}
+		}
+		return sb.toString();
+	}
+
+	@Override
+	public String getVersion() throws NotificationDaoException {
+		try {
+			return hub.getHubVersion();
+		} catch (IOException | BDRestException | URISyntaxException e) {
+			throw new NotificationDaoException(e.getMessage());
+		}
+	}
+
+	@Override
+	public List<NotificationItem> getNotifications(String startDate, String endDate, int limit)
+			throws NotificationDaoException {
+
+		List<String> urlSegments = new ArrayList<>();
+		urlSegments.add("api");
+		urlSegments.add("notifications");
+
+		Set<AbstractMap.SimpleEntry<String, String>> queryParameters = new HashSet<>();
+		queryParameters.add(new AbstractMap.SimpleEntry<String, String>("startDate", startDate));
+		queryParameters.add(new AbstractMap.SimpleEntry<String, String>("endDate", endDate));
+		queryParameters.add(new AbstractMap.SimpleEntry<String, String>("limit", String.valueOf(limit)));
+		try {
+			return hubItemListParser.parseItemList(urlSegments, queryParameters);
+		} catch (IOException | URISyntaxException | ResourceDoesNotExistException e) {
+			throw new NotificationDaoException("Error parsing NotificationItemList: " + e.getMessage(), e);
+		}
+	}
 
 }

@@ -6,23 +6,23 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
 public class JsonModelParser {
-    private final Gson gson;
+	private final Gson gson;
 
-    public JsonModelParser(String dateFormat) {
-	gson = new GsonBuilder().setDateFormat(dateFormat).create();
-    }
+	public JsonModelParser(String dateFormat) {
+		gson = new GsonBuilder().setDateFormat(dateFormat).create();
+	}
 
-    /**
-     * Get an object of the given type from the given JSON element, using the
-     * given Gson object.
-     * 
-     * @param modelClass
-     * @param gson
-     * @param elem
-     * @return
-     * @throws NotificationDaoException
-     */
-    public <T> T parse(Class<T> modelClass, JsonElement elem) {
-	return gson.fromJson(elem, modelClass);
-    }
+	/**
+	 * Get an object of the given type from the given JSON element, using the
+	 * given Gson object.
+	 * 
+	 * @param modelClass
+	 * @param gson
+	 * @param elem
+	 * @return
+	 * @throws NotificationDaoException
+	 */
+	public <T> T parse(Class<T> modelClass, JsonElement elem) {
+		return gson.fromJson(elem, modelClass);
+	}
 }

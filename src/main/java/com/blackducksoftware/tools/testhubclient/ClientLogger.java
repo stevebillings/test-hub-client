@@ -27,95 +27,95 @@ import com.blackducksoftware.integration.hub.logging.LogLevel;
 
 public class ClientLogger implements IntLogger, Serializable {
 
-    private static final long serialVersionUID = 6030328026877850956L;
-    private LogLevel level = LogLevel.INFO;
+	private static final long serialVersionUID = 6030328026877850956L;
+	private LogLevel level = LogLevel.INFO;
 
-    @Override
-    public void debug(final String txt) {
-	if (LogLevel.isLoggable(level, LogLevel.DEBUG)) {
-	    printLog(txt, null);
+	@Override
+	public void debug(final String txt) {
+		if (LogLevel.isLoggable(level, LogLevel.DEBUG)) {
+			printLog(txt, null);
+		}
 	}
-    }
 
-    @Override
-    public void debug(final String txt, final Throwable e) {
-	if (LogLevel.isLoggable(level, LogLevel.DEBUG)) {
-	    printLog(txt, e);
+	@Override
+	public void debug(final String txt, final Throwable e) {
+		if (LogLevel.isLoggable(level, LogLevel.DEBUG)) {
+			printLog(txt, e);
+		}
 	}
-    }
 
-    @Override
-    public void error(final Throwable e) {
-	if (LogLevel.isLoggable(level, LogLevel.ERROR)) {
-	    printLog(null, e);
+	@Override
+	public void error(final Throwable e) {
+		if (LogLevel.isLoggable(level, LogLevel.ERROR)) {
+			printLog(null, e);
+		}
 	}
-    }
 
-    @Override
-    public void error(final String txt) {
-	if (LogLevel.isLoggable(level, LogLevel.ERROR)) {
-	    printLog(txt, null);
+	@Override
+	public void error(final String txt) {
+		if (LogLevel.isLoggable(level, LogLevel.ERROR)) {
+			printLog(txt, null);
+		}
 	}
-    }
 
-    @Override
-    public void error(final String txt, final Throwable e) {
-	if (LogLevel.isLoggable(level, LogLevel.ERROR)) {
-	    printLog(txt, e);
+	@Override
+	public void error(final String txt, final Throwable e) {
+		if (LogLevel.isLoggable(level, LogLevel.ERROR)) {
+			printLog(txt, e);
+		}
 	}
-    }
 
-    @Override
-    public void info(final String txt) {
-	if (LogLevel.isLoggable(level, LogLevel.INFO)) {
-	    printLog(txt, null);
+	@Override
+	public void info(final String txt) {
+		if (LogLevel.isLoggable(level, LogLevel.INFO)) {
+			printLog(txt, null);
+		}
 	}
-    }
 
-    @Override
-    public void trace(final String txt) {
-	if (LogLevel.isLoggable(level, LogLevel.TRACE)) {
-	    printLog(txt, null);
+	@Override
+	public void trace(final String txt) {
+		if (LogLevel.isLoggable(level, LogLevel.TRACE)) {
+			printLog(txt, null);
+		}
 	}
-    }
 
-    @Override
-    public void trace(final String txt, final Throwable e) {
-	if (LogLevel.isLoggable(level, LogLevel.TRACE)) {
-	    printLog(txt, e);
+	@Override
+	public void trace(final String txt, final Throwable e) {
+		if (LogLevel.isLoggable(level, LogLevel.TRACE)) {
+			printLog(txt, e);
+		}
 	}
-    }
 
-    @Override
-    public void warn(final String txt) {
-	if (LogLevel.isLoggable(level, LogLevel.WARN)) {
-	    printLog(txt, null);
+	@Override
+	public void warn(final String txt) {
+		if (LogLevel.isLoggable(level, LogLevel.WARN)) {
+			printLog(txt, null);
+		}
 	}
-    }
 
-    private void printLog(final String txt, final Throwable e) {
-	if (txt != null) {
+	private void printLog(final String txt, final Throwable e) {
+		if (txt != null) {
 
-	    System.out.println("[" + level.name() + "] " + txt);
+			System.out.println("[" + level.name() + "] " + txt);
 
+		}
+		if (e != null) {
+			final StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+
+			System.out.println(sw.toString());
+
+		}
 	}
-	if (e != null) {
-	    final StringWriter sw = new StringWriter();
-	    e.printStackTrace(new PrintWriter(sw));
 
-	    System.out.println(sw.toString());
-
+	@Override
+	public void setLogLevel(LogLevel logLevel) {
+		this.level = logLevel;
 	}
-    }
 
-    @Override
-    public void setLogLevel(LogLevel logLevel) {
-	this.level = logLevel;
-    }
-
-    @Override
-    public LogLevel getLogLevel() {
-	return level;
-    }
+	@Override
+	public LogLevel getLogLevel() {
+		return level;
+	}
 
 }

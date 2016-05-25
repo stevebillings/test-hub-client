@@ -16,25 +16,24 @@ import com.blackducksoftware.tools.testhubclient.service.NotificationServiceExce
 
 public class NotificationServiceImplTest {
 
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-    }
+	@BeforeClass
+	public static void setUpBeforeClass() throws Exception {
+	}
 
-    @AfterClass
-    public static void tearDownAfterClass() throws Exception {
-    }
+	@AfterClass
+	public static void tearDownAfterClass() throws Exception {
+	}
 
-    @Test
-    public void test() throws NotificationDaoException,
-	    NotificationServiceException {
-	NotificationDao dao = new MockNotificationDao();
-	NotificationServiceImpl svc = new NotificationServiceImpl(dao);
+	@Test
+	public void test() throws NotificationDaoException, NotificationServiceException {
+		NotificationDao dao = new MockNotificationDao();
+		NotificationServiceImpl svc = new NotificationServiceImpl(dao);
 
-	int limit = 3; // Mock returns 3, one of each
-	List<NotificationItem> notifs = svc.getNotifications(
-		"2016-05-01T00:00:00.000Z", "2016-05-11T00:00:00.000Z", limit);
+		int limit = 3; // Mock returns 3, one of each
+		List<NotificationItem> notifs = svc.getNotifications("2016-05-01T00:00:00.000Z", "2016-05-11T00:00:00.000Z",
+				limit);
 
-	assertEquals(limit, notifs.size());
-    }
+		assertEquals(limit, notifs.size());
+	}
 
 }

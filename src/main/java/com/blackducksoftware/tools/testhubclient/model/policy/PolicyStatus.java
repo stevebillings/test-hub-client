@@ -7,5 +7,5 @@ package com.blackducksoftware.tools.testhubclient.model.policy;
  *
  */
 public enum PolicyStatus {
-    IN_VIOLATION, NOT_IN_VIOLATION, IN_VIOLATION_OVERRIDEN
+	IN_VIOLATION, NOT_IN_VIOLATION, IN_VIOLATION_OVERRIDEN
 }

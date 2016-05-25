@@ -9,16 +9,15 @@ import com.blackducksoftware.tools.testhubclient.model.Item;
  *
  */
 public class ApprovalStatusItem extends Item {
-    private PolicyStatus approvalStatus;
+	private PolicyStatus approvalStatus;
 
-    public PolicyStatus getApprovalStatus() {
-	return approvalStatus;
-    }
+	public PolicyStatus getApprovalStatus() {
+		return approvalStatus;
+	}
 
-    @Override
-    public String toString() {
-	return "PolicyStatus [approvalStatus=" + approvalStatus + ", meta="
-		+ getMeta() + "]";
-    }
+	@Override
+	public String toString() {
+		return "PolicyStatus [approvalStatus=" + approvalStatus + ", meta=" + getMeta() + "]";
+	}
 
 }
