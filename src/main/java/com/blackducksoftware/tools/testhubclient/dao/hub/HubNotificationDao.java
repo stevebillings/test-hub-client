@@ -21,7 +21,7 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ResourceDoesNotExistException;
-import com.blackducksoftware.integration.hub.item.HubItemListParser;
+import com.blackducksoftware.integration.hub.item.PolymorphicHubItemListService;
 import com.blackducksoftware.integration.hub.rest.RestConnection;
 import com.blackducksoftware.tools.testhubclient.ClientLogger;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
@@ -36,22 +36,22 @@ import com.google.gson.reflect.TypeToken;
 
 /**
  * Communicates with the Hub to get Notifications and data they point to.
- * 
+ *
  * @author sbillings
  *
  */
 public class HubNotificationDao implements NotificationDao {
-	private String dateFormat;
-	private ClientLogger log = new ClientLogger();
-	private RestConnection restConnection;
-	private HubIntRestService hub;
-	private String hubUrl;
-	private Map<String, JsonElement> itemJsonCache; // URL -> Json Element cache
+	private final String dateFormat;
+	private final ClientLogger log = new ClientLogger();
+	private final RestConnection restConnection;
+	private final HubIntRestService hub;
+	private final String hubUrl;
+	private final Map<String, JsonElement> itemJsonCache; // URL -> Json Element cache
 	private final JsonModelParser jsonModelParser;
 	private final ClientResource reUsableResource;
-	HubItemListParser<NotificationItem> hubItemListParser;
+	PolymorphicHubItemListService<NotificationItem> hubItemListParser;
 
-	public HubNotificationDao(String hubUrl, String username, String password, String dateFormat)
+	public HubNotificationDao(final String hubUrl, final String username, final String password, final String dateFormat)
 			throws HubIntegrationException, URISyntaxException, BDRestException, NotificationDaoException {
 		this.hubUrl = hubUrl;
 
@@ -65,42 +65,43 @@ public class HubNotificationDao implements NotificationDao {
 
 		try {
 			reUsableResource = restConnection.createClientResource();
-		} catch (URISyntaxException e) {
+		} catch (final URISyntaxException e) {
 			throw new NotificationDaoException(e.getMessage());
 		}
 		reUsableResource.setMethod(Method.GET);
 
-		TypeToken<NotificationItem> typeToken = new TypeToken<NotificationItem>() {
+		final TypeToken<NotificationItem> typeToken = new TypeToken<NotificationItem>() {
 		};
-		Map<String, Class<? extends NotificationItem>> typeToSubclassMap = new HashMap<>();
+		final Map<String, Class<? extends NotificationItem>> typeToSubclassMap = new HashMap<>();
 		typeToSubclassMap.put("VULNERABILITY", VulnerabilityNotificationItem.class);
 		typeToSubclassMap.put("RULE_VIOLATION", RuleViolationNotificationItem.class);
 		typeToSubclassMap.put("POLICY_OVERRIDE", PolicyOverrideNotificationItem.class);
 
-		hubItemListParser = new HubItemListParser<NotificationItem>(restConnection, NotificationItem.class, typeToken,
+		hubItemListParser = new PolymorphicHubItemListService<NotificationItem>(restConnection, NotificationItem.class,
+				typeToken,
 				typeToSubclassMap);
 	}
 
 	@Override
-	public <T> T getFromRelativeUrl(Class<T> modelClass, List<String> urlSegments,
-			Set<AbstractMap.SimpleEntry<String, String>> queryParameters) throws NotificationDaoException {
+	public <T> T getFromRelativeUrl(final Class<T> modelClass, final List<String> urlSegments,
+			final Set<AbstractMap.SimpleEntry<String, String>> queryParameters) throws NotificationDaoException {
 
 		try {
 			return restConnection.getFromRelativeUrl(modelClass, urlSegments, queryParameters);
-		} catch (URISyntaxException | IOException | ResourceDoesNotExistException e) {
+		} catch (URISyntaxException | IOException | ResourceDoesNotExistException | BDRestException e) {
 			throw new NotificationDaoException("Error getting resource from relative url segments " + urlSegments
 					+ " and query parameters " + queryParameters + "; errorCode: " + e.getMessage());
 		}
 	}
 
-	private ClientResource getClientResourceForGet(List<String> urlSegments,
-			Set<AbstractMap.SimpleEntry<String, String>> queryParameters) throws NotificationDaoException {
+	private ClientResource getClientResourceForGet(final List<String> urlSegments,
+			final Set<AbstractMap.SimpleEntry<String, String>> queryParameters) throws NotificationDaoException {
 
-		Reference queryRef = new Reference(hubUrl);
-		for (String urlSegment : urlSegments) {
+		final Reference queryRef = new Reference(hubUrl);
+		for (final String urlSegment : urlSegments) {
 			queryRef.addSegment(urlSegment);
 		}
-		for (AbstractMap.SimpleEntry<String, String> queryParameter : queryParameters) {
+		for (final AbstractMap.SimpleEntry<String, String> queryParameter : queryParameters) {
 			queryRef.addQueryParameter(queryParameter.getKey(), queryParameter.getValue());
 		}
 		reUsableResource.setReference(queryRef);
@@ -109,13 +110,14 @@ public class HubNotificationDao implements NotificationDao {
 		return reUsableResource;
 	}
 
-	public <T> T getFromAbsoluteUrl(Class<T> modelClass, String url) throws NotificationDaoException {
+	@Override
+	public <T> T getFromAbsoluteUrl(final Class<T> modelClass, final String url) throws NotificationDaoException {
 		if (url == null) {
 			return null;
 		}
 		try {
 			return restConnection.getFromAbsoluteUrl(modelClass, url);
-		} catch (ResourceDoesNotExistException | URISyntaxException | IOException e) {
+		} catch (ResourceDoesNotExistException | URISyntaxException | IOException | BDRestException e) {
 			throw new NotificationDaoException("Error getting resource from " + url + ": " + e.getMessage());
 		}
 	}
@@ -125,7 +127,7 @@ public class HubNotificationDao implements NotificationDao {
 		Reader reader;
 		try {
 			reader = response.getEntity().getReader();
-		} catch (IOException e1) {
+		} catch (final IOException e1) {
 			throw new NotificationDaoException(e1.getMessage());
 		}
 		final BufferedReader bufReader = new BufferedReader(reader);
@@ -136,13 +138,13 @@ public class HubNotificationDao implements NotificationDao {
 					sb.append(line);
 					sb.append("\n");
 				}
-			} catch (IOException e) {
+			} catch (final IOException e) {
 				throw new NotificationDaoException(e.getMessage());
 			}
 		} finally {
 			try {
 				bufReader.close();
-			} catch (IOException e) {
+			} catch (final IOException e) {
 			}
 		}
 		return sb.toString();
@@ -158,20 +160,20 @@ public class HubNotificationDao implements NotificationDao {
 	}
 
 	@Override
-	public List<NotificationItem> getNotifications(String startDate, String endDate, int limit)
+	public List<NotificationItem> getNotifications(final String startDate, final String endDate, final int limit)
 			throws NotificationDaoException {
 
-		List<String> urlSegments = new ArrayList<>();
+		final List<String> urlSegments = new ArrayList<>();
 		urlSegments.add("api");
 		urlSegments.add("notifications");
 
-		Set<AbstractMap.SimpleEntry<String, String>> queryParameters = new HashSet<>();
+		final Set<AbstractMap.SimpleEntry<String, String>> queryParameters = new HashSet<>();
 		queryParameters.add(new AbstractMap.SimpleEntry<String, String>("startDate", startDate));
 		queryParameters.add(new AbstractMap.SimpleEntry<String, String>("endDate", endDate));
 		queryParameters.add(new AbstractMap.SimpleEntry<String, String>("limit", String.valueOf(limit)));
 		try {
-			return hubItemListParser.parseItemList(urlSegments, queryParameters);
-		} catch (IOException | URISyntaxException | ResourceDoesNotExistException e) {
+			return hubItemListParser.httpGetItemList(urlSegments, queryParameters);
+		} catch (IOException | URISyntaxException | ResourceDoesNotExistException | BDRestException e) {
 			throw new NotificationDaoException("Error parsing NotificationItemList: " + e.getMessage(), e);
 		}
 	}
