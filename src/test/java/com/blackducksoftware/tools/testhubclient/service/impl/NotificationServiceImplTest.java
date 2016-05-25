@@ -30,7 +30,7 @@ public class NotificationServiceImplTest {
 	NotificationDao dao = new MockNotificationDao();
 	NotificationServiceImpl svc = new NotificationServiceImpl(dao);
 
-	int limit = 1;
+	int limit = 3; // Mock returns 3, one of each
 	List<NotificationItem> notifs = svc.getNotifications(
 		"2016-05-01T00:00:00.000Z", "2016-05-11T00:00:00.000Z", limit);
 

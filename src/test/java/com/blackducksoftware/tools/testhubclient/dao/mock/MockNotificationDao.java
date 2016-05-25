@@ -8,9 +8,8 @@ import java.util.Set;
 import com.blackducksoftware.integration.hub.meta.MetaInformation;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
-import com.blackducksoftware.tools.testhubclient.model.Item;
-import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.HubItemList;
+import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationType;
 import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
@@ -91,39 +90,27 @@ public class MockNotificationDao implements NotificationDao {
     }
 
     @Override
-    public <T> T getAndCacheItemsFromRelativeUrl(Class<T> modelClass,
-	    List<String> urlSegments,
-	    Set<AbstractMap.SimpleEntry<String, String>> queryParameters)
-	    throws NotificationDaoException {
+    public List<NotificationItem> getNotifications(String startDate,
+	    String endDate, int limit) throws NotificationDaoException {
 
-	return getFromRelativeUrl(modelClass, urlSegments, queryParameters);
-    }
+	List<NotificationItem> items = new ArrayList<>();
 
-    @Override
-    public <T extends Item> T getItemFromCache(Class<T> itemClass,
-	    String itemUrl) throws NotificationDaoException {
-	if ((itemClass == VulnerabilityNotificationItem.class)
-		&& (TEST_ITEM_URL.equals(itemUrl))) {
-	    VulnerabilityNotificationItem item = new VulnerabilityNotificationItem();
-	    item.setContentType("testItemCreatedAt");
-	    item.setType(NotificationType.VULNERABILITY);
-	    return (T) (item);
-	} else if ((itemClass == RuleViolationNotificationItem.class)
-		&& (TEST_ITEM_URL.equals(itemUrl))) {
-	    RuleViolationNotificationItem item = new RuleViolationNotificationItem();
-	    item.setContentType("testItemCreatedAt");
-	    item.setType(NotificationType.RULE_VIOLATION);
-	    return (T) (item);
-	} else if ((itemClass == PolicyOverrideNotificationItem.class)
-		&& (TEST_ITEM_URL.equals(itemUrl))) {
-	    PolicyOverrideNotificationItem item = new PolicyOverrideNotificationItem();
-	    item.setContentType("testItemCreatedAt");
-	    item.setType(NotificationType.RULE_VIOLATION);
-	    return (T) (item);
-	} else {
-	    throw new NotificationDaoException("Item with URL " + itemUrl
-		    + " is not in mock cache");
-	}
+	NotificationItem item = new VulnerabilityNotificationItem();
+	item.setContentType("testItemCreatedAt");
+	item.setType(NotificationType.VULNERABILITY);
+	items.add(item);
+
+	item = new RuleViolationNotificationItem();
+	item.setContentType("testItemCreatedAt");
+	item.setType(NotificationType.RULE_VIOLATION);
+	items.add(item);
+
+	item = new PolicyOverrideNotificationItem();
+	item.setContentType("testItemCreatedAt");
+	item.setType(NotificationType.RULE_VIOLATION);
+	items.add(item);
+
+	return items;
     }
 
 }

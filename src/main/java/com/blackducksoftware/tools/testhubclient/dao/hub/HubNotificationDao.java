@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.Reader;
 import java.net.URISyntaxException;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,18 +21,18 @@ import com.blackducksoftware.integration.hub.HubIntRestService;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.HubIntegrationException;
 import com.blackducksoftware.integration.hub.exception.ResourceDoesNotExistException;
+import com.blackducksoftware.integration.hub.item.HubItemListParser;
 import com.blackducksoftware.integration.hub.rest.RestConnection;
 import com.blackducksoftware.tools.testhubclient.ClientLogger;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDaoException;
 import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
-import com.blackducksoftware.tools.testhubclient.model.Item;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
+import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
+import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
+import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
+import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * Communicates with the Hub to get Notifications and data they point to.
@@ -47,6 +49,7 @@ public class HubNotificationDao implements NotificationDao {
     private Map<String, JsonElement> itemJsonCache; // URL -> Json Element cache
     private final JsonModelParser jsonModelParser;
     private final ClientResource reUsableResource;
+    HubItemListParser<NotificationItem> hubItemListParser;
 
     public HubNotificationDao(String hubUrl, String username, String password,
 	    String dateFormat) throws HubIntegrationException,
@@ -67,6 +70,20 @@ public class HubNotificationDao implements NotificationDao {
 	    throw new NotificationDaoException(e.getMessage());
 	}
 	reUsableResource.setMethod(Method.GET);
+
+	TypeToken<NotificationItem> typeToken = new TypeToken<NotificationItem>() {
+	};
+	Map<String, Class<? extends NotificationItem>> typeToSubclassMap = new HashMap<>();
+	typeToSubclassMap.put("VULNERABILITY",
+		VulnerabilityNotificationItem.class);
+	typeToSubclassMap.put("RULE_VIOLATION",
+		RuleViolationNotificationItem.class);
+	typeToSubclassMap.put("POLICY_OVERRIDE",
+		PolicyOverrideNotificationItem.class);
+
+	hubItemListParser = new HubItemListParser<NotificationItem>(
+		restConnection, NotificationItem.class, typeToken,
+		typeToSubclassMap);
     }
 
     @Override
@@ -86,57 +103,6 @@ public class HubNotificationDao implements NotificationDao {
 			    + queryParameters + "; errorCode: "
 			    + e.getMessage());
 	}
-    }
-
-    @Override
-    public <T> T getAndCacheItemsFromRelativeUrl(Class<T> modelClass,
-	    List<String> urlSegments,
-	    Set<AbstractMap.SimpleEntry<String, String>> queryParameters)
-	    throws NotificationDaoException {
-
-	final ClientResource resource = getClientResourceForGet(urlSegments,
-		queryParameters);
-	log.info("Resource: " + resource);
-	int responseCode = resource.getResponse().getStatus().getCode();
-
-	if (responseCode == 200 || responseCode == 204 || responseCode == 202) {
-	    final String response = readResponseAsString(resource.getResponse());
-
-	    Gson gson = new GsonBuilder().setDateFormat(dateFormat).create();
-	    JsonParser parser = new JsonParser();
-	    JsonObject json = parser.parse(response).getAsJsonObject();
-	    T modelObject = gson.fromJson(json, modelClass);
-
-	    JsonArray array = json.get("items").getAsJsonArray();
-	    for (JsonElement elem : array) {
-		Item genericItem = jsonModelParser.parse(Item.class, elem);
-		String itemUrl = genericItem.getMeta().getHref();
-		log.info("Caching: Key: " + itemUrl + "; Value: "
-			+ elem.toString());
-		itemJsonCache.put(itemUrl, elem);
-	    }
-
-	    return modelObject;
-	} else {
-	    throw new NotificationDaoException(
-		    "Error getting resource from relative url segments "
-			    + urlSegments + " and query parameters "
-			    + queryParameters + "; errorCode: " + responseCode);
-	}
-    }
-
-    @Override
-    public <T extends Item> T getItemFromCache(Class<T> itemClass,
-	    String itemUrl) throws NotificationDaoException {
-	if (!itemJsonCache.containsKey(itemUrl)) {
-	    throw new NotificationDaoException(
-		    "Item with URL "
-			    + itemUrl
-			    + " is not in cache. Make sure it was fetched via getAndCacheItemsFromRelativeUrl(...)");
-	}
-	T item = jsonModelParser.parse(itemClass, itemJsonCache.get(itemUrl));
-	return item;
-
     }
 
     private ClientResource getClientResourceForGet(List<String> urlSegments,
@@ -206,6 +172,31 @@ public class HubNotificationDao implements NotificationDao {
 	    return hub.getHubVersion();
 	} catch (IOException | BDRestException | URISyntaxException e) {
 	    throw new NotificationDaoException(e.getMessage());
+	}
+    }
+
+    @Override
+    public List<NotificationItem> getNotifications(String startDate,
+	    String endDate, int limit) throws NotificationDaoException {
+
+	List<String> urlSegments = new ArrayList<>();
+	urlSegments.add("api");
+	urlSegments.add("notifications");
+
+	Set<AbstractMap.SimpleEntry<String, String>> queryParameters = new HashSet<>();
+	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
+		"startDate", startDate));
+	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
+		"endDate", endDate));
+	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
+		"limit", String.valueOf(limit)));
+	try {
+	    return hubItemListParser
+		    .parseItemList(urlSegments, queryParameters);
+	} catch (IOException | URISyntaxException
+		| ResourceDoesNotExistException e) {
+	    throw new NotificationDaoException(
+		    "Error parsing NotificationItemList: " + e.getMessage(), e);
 	}
     }
 

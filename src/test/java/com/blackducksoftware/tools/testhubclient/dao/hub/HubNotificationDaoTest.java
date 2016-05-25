@@ -1,7 +1,6 @@
 package com.blackducksoftware.tools.testhubclient.dao.hub;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -15,12 +14,9 @@ import org.junit.Test;
 
 import com.blackducksoftware.tools.testhubclient.dao.NotificationDao;
 import com.blackducksoftware.tools.testhubclient.json.JsonModelParser;
-import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.HubItemList;
+import com.blackducksoftware.tools.testhubclient.model.notification.NotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.notification.NotificationType;
-import com.blackducksoftware.tools.testhubclient.model.notification.PolicyOverrideNotificationItem;
-import com.blackducksoftware.tools.testhubclient.model.notification.RuleViolationNotificationItem;
-import com.blackducksoftware.tools.testhubclient.model.notification.VulnerabilityNotificationItem;
 import com.blackducksoftware.tools.testhubclient.model.projectversion.ProjectVersionItem;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -92,55 +88,11 @@ public class HubNotificationDaoTest {
 		"endDate", "2016-05-02T00:00:00.000Z"));
 	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
 		"limit", "1"));
-	HubItemList notifResponse = hub.getFromRelativeUrl(
-		HubItemList.class, urlSegments, queryParameters);
+	HubItemList notifResponse = hub.getFromRelativeUrl(HubItemList.class,
+		urlSegments, queryParameters);
 	List<NotificationItem> notifs = notifResponse.getItems();
 	for (NotificationItem notif : notifs) {
 	    System.out.println(notif);
-	}
-    }
-
-    @Test
-    public void testGetFromRelativeUrlJsonObject() throws Exception {
-	List<String> urlSegments = new ArrayList<>();
-	urlSegments.add("api");
-	urlSegments.add("notifications");
-
-	Set<AbstractMap.SimpleEntry<String, String>> queryParameters = new HashSet<>();
-	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
-		"startDate", "2016-05-01T00:00:00.000Z"));
-	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
-		"endDate", "2016-05-05T00:00:00.000Z"));
-	queryParameters.add(new AbstractMap.SimpleEntry<String, String>(
-		"limit", "100"));
-	HubItemList notifResponse = hub
-		.getAndCacheItemsFromRelativeUrl(HubItemList.class,
-			urlSegments, queryParameters);
-
-	for (NotificationItem genericNotif : notifResponse.getItems()) {
-	    if (NotificationType.VULNERABILITY.equals(genericNotif.getType())) {
-		VulnerabilityNotificationItem vulnerabilityNotif = hub
-			.getItemFromCache(VulnerabilityNotificationItem.class,
-				genericNotif.getMeta().getHref());
-		System.out.println(vulnerabilityNotif);
-		assertTrue(vulnerabilityNotif.getContent()
-			.getNewVulnerabilityCount() > 0);
-	    } else if (NotificationType.RULE_VIOLATION.equals(genericNotif
-		    .getType())) {
-		RuleViolationNotificationItem ruleViolationNotif = hub
-			.getItemFromCache(RuleViolationNotificationItem.class,
-				genericNotif.getMeta().getHref());
-		System.out.println(ruleViolationNotif);
-		assertTrue(ruleViolationNotif.getContent()
-			.getComponentVersionStatuses().size() > 0);
-	    } else if (NotificationType.POLICY_OVERRIDE.equals(genericNotif
-		    .getType())) {
-		PolicyOverrideNotificationItem policyOverrideNotif = hub
-			.getItemFromCache(PolicyOverrideNotificationItem.class,
-				genericNotif.getMeta().getHref());
-		System.out.println(policyOverrideNotif);
-		assertTrue(policyOverrideNotif.getContent().getProjectName() != null);
-	    }
 	}
     }
 
