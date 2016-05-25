@@ -47,7 +47,7 @@ public class HubCommonClientTest {
 	Statistics stats = client.run("2016-05-01T00:00:00.000Z",
 		"2016-05-11T00:00:00.000Z", 1000);
 	assertEquals(711, stats.getNotificationCount());
-	assertEquals(556, stats.getTicketCount());
+	assertEquals(554, stats.getTicketCount());
 	assertEquals(431, stats.getDuplicateCount());
     }
 
