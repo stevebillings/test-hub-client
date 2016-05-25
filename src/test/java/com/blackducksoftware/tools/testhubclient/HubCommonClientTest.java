@@ -35,31 +35,31 @@ public class HubCommonClientTest {
 	@Test
 	public void test() throws Exception {
 
-		String username = "sysadmin";
-		String password = "blackduck";
+		final String username = "sysadmin";
+		final String password = "blackduck";
 
-		NotificationDao dao = new HubNotificationDao("http://eng-hub-valid03.dc1.lan", username, password, DATE_FORMAT);
-		NotificationService svc = new NotificationServiceImpl(dao);
+		final NotificationDao dao = new HubNotificationDao("http://eng-hub-valid03.dc1.lan", username, password, DATE_FORMAT);
+		final NotificationService svc = new NotificationServiceImpl(dao);
 
-		HubCommonClient client = new HubCommonClient(svc);
-		Statistics stats = client.run("2016-05-01T00:00:00.000Z", "2016-05-11T00:00:00.000Z", 1000);
+		final HubCommonClient client = new HubCommonClient(svc);
+		final Statistics stats = client.run("2016-05-01T00:00:00.000Z", "2016-05-11T00:00:00.000Z", 1000);
 		assertEquals(711, stats.getNotificationCount());
-		assertEquals(554, stats.getTicketCount());
+		assertEquals(550, stats.getTicketCount());
 		assertEquals(431, stats.getDuplicateCount());
 	}
 
-	private ClientResource createClientResourceForGet(List<String> urlSegments,
-			Set<AbstractMap.SimpleEntry<String, String>> queryParameters) throws NotificationDaoException {
+	private ClientResource createClientResourceForGet(final List<String> urlSegments,
+			final Set<AbstractMap.SimpleEntry<String, String>> queryParameters) throws NotificationDaoException {
 		ClientResource resource;
 		try {
 			resource = hub.createClientResource();
-		} catch (URISyntaxException e) {
+		} catch (final URISyntaxException e) {
 			throw new NotificationDaoException(e.getMessage());
 		}
-		for (String urlSegment : urlSegments) {
+		for (final String urlSegment : urlSegments) {
 			resource.addSegment(urlSegment);
 		}
-		for (AbstractMap.SimpleEntry<String, String> queryParameter : queryParameters) {
+		for (final AbstractMap.SimpleEntry<String, String> queryParameter : queryParameters) {
 			resource.addQueryParameter(queryParameter.getKey(), queryParameter.getValue());
 		}
 
