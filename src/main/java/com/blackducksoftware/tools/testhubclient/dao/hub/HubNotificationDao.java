@@ -61,7 +61,7 @@ public class HubNotificationDao implements NotificationDao {
 			final Set<AbstractMap.SimpleEntry<String, String>> queryParameters) throws NotificationDaoException {
 
 		try {
-			return restConnection.getFromRelativeUrl(modelClass, urlSegments, queryParameters);
+			return restConnection.httpGetFromRelativeUrl(modelClass, urlSegments, queryParameters);
 		} catch (URISyntaxException | IOException | ResourceDoesNotExistException | BDRestException e) {
 			throw new NotificationDaoException("Error getting resource from relative url segments " + urlSegments
 					+ " and query parameters " + queryParameters + "; errorCode: " + e.getMessage());
@@ -74,7 +74,7 @@ public class HubNotificationDao implements NotificationDao {
 			return null;
 		}
 		try {
-			return restConnection.getFromAbsoluteUrl(modelClass, url);
+			return restConnection.httpGetFromAbsoluteUrl(modelClass, url);
 		} catch (ResourceDoesNotExistException | URISyntaxException | IOException | BDRestException e) {
 			throw new NotificationDaoException("Error getting resource from " + url + ": " + e.getMessage());
 		}
